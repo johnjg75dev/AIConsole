@@ -113,6 +113,41 @@
                 </StackPanel>
             </Border>
 
+            <!-- ============== IMPORT ============== -->
+            <TextBlock Text="IMPORT FROM OTHER TOOLS" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" Margin="0,20,0,8"/>
+            <Border Background="{DynamicResource SurfaceAltBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="14">
+                <StackPanel>
+                    <TextBlock Text="Import OpenAI-compatible endpoints from OpenCode, Continue, Zed, or a JSON file. Local servers (Ollama, LM Studio, ...) can be auto-detected."
+                               FontSize="11.5" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <Button Style="{DynamicResource FluentButton}" Content="Scan installed tools" Padding="10,6" FontSize="12" Margin="0,0,8,0"
+                                Command="{Binding ScanImportsCommand}"/>
+                        <Button Style="{DynamicResource FluentButton}" Content="Detect local servers" Padding="10,6" FontSize="12" Margin="0,0,8,0"
+                                Command="{Binding DetectLocalServersCommand}"/>
+                        <Button Style="{DynamicResource FluentButton}" Content="Import file..." Padding="10,6" FontSize="12"
+                                Click="ImportFromFile_Click"/>
+                    </StackPanel>
+                    <ItemsControl ItemsSource="{Binding Imports}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,3">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="12.5" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis">
+                                            <Run Text="{Binding BaseUrl}"/><Run Text=" · "/><Run Text="{Binding Source}"/>
+                                        </TextBlock>
+                                    </StackPanel>
+                                    <Button Grid.Column="1" Style="{DynamicResource AccentButton}" Content="Import" Padding="10,6" FontSize="12"
+                                            Command="{Binding DataContext.ImportEndpointCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
             <!-- ============== APPEARANCE ============== -->
             <TextBlock Text="APPEARANCE" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" Margin="0,20,0,8"/>
             <Border Background="{DynamicResource SurfaceAltBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="14">

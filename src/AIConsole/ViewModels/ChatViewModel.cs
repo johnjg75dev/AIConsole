@@ -123,8 +123,9 @@ public partial class ChatViewModel : ObservableObject
     partial void OnSelectedModelChanged(ModelChoice? value)
     {
         if (value is null) return;
-        _appSettings.LastModelKey = value.Key;
-        _settings.Set(SettingKeys.Settings, _appSettings);
+        var s = _settings.Get(SettingKeys.Settings, new AppSettings());
+        s.LastModelKey = value.Key;
+        _settings.Set(SettingKeys.Settings, s);
         if (SelectedConversation is { } c) { _chat.SetModel(c.Id, value.Key); c.Model = value.Key; }
     }
 

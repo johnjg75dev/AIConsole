@@ -71,10 +71,15 @@ public partial class SettingsViewModel : ObservableObject
 
     public event Action<string>? Status;
 
+    // ── import from other tools ──
+    public ObservableCollection<Services.ImportedEndpoint> Imports { get; } = new();
+    private readonly Services.ConfigImporter _importer;
+
     public SettingsViewModel(EndpointRepo endpoints, SettingsRepo settings, OpenAiClient client,
         ModelRefreshService refresh, HotkeyService hotkey, ChatViewModel chat)
     {
         _endpoints = endpoints; _settings = settings; _client = client; _refresh = refresh; _hotkey = hotkey; _chat = chat;
+        _importer = new Services.ConfigImporter(client);
         _app = _settings.Get(SettingKeys.Settings, new AppSettings());
 
         _theme = _app.Theme; _accentOverride = _app.AccentOverride; _followWindowsTheme = _app.FollowWindowsTheme;
@@ -215,6 +220,47 @@ public partial class SettingsViewModel : ObservableObject
         Save();
     }
 
+    // ── import ──
+
+    [RelayCommand]
+    public void ScanImports()
+    {
+        Imports.Clear();
+        foreach (var i in _importer.ScanKnownLocations()) Imports.Add(i);
+        Status?.Invoke(Imports.Count == 0 ? "No other tool configs found." : $"Found {Imports.Count} importable endpoint(s).");
+    }
+
+    [RelayCommand]
+    public async Task DetectLocalServersAsync()
+    {
+        Imports.Clear();
+        foreach (var i in await _importer.DetectLocalServersAsync()) Imports.Add(i);
+        Status?.Invoke(Imports.Count == 0 ? "No local servers detected." : $"Detected {Imports.Count} local server(s).");
+    }
+
+    [RelayCommand]
+    public void ImportEndpoint(Services.ImportedEndpoint imp)
+    {
+        var ep = new Endpoint
+        {
+            Id = Guid.NewGuid().ToString("N"),
+            Name = string.IsNullOrWhiteSpace(imp.Name) ? "Imported" : imp.Name,
+            BaseUrl = imp.BaseUrl,
+            ApiKey = string.IsNullOrWhiteSpace(imp.ApiKey) ? null : imp.ApiKey,
+            ShowAllModels = false,
+        };
+        _endpoints.Upsert(ep);
+        _endpoints.SyncModels(ep.Id, imp.Models, autoEnable: true, prune: false);
+        Reload();
+        _refresh.NotifyModelsChanged();
+        Status?.Invoke($"Imported '{ep.Name}'.");
+    }
+
+    public void ImportFromFile(string path)
+    {
+        foreach (var i in _importer.ParseConfigFile(path)) ImportEndpoint(i);
+    }
+
     public void SetHotkeyService(HotkeyService hk) => _hotkey = hk;
 
     // ── hotkey ──
@@ -225,7 +271,12 @@ public partial class SettingsViewModel : ObservableObject
         _hotkey.Register(hk);
     }
 
-    private void Save() => _settings.Set(SettingKeys.Settings, _app);
+    private void Save()
+    {
+        var stored = _settings.Get(SettingKeys.Settings, new AppSettings());
+        _app.LastModelKey = stored.LastModelKey; // don't clobber the chat-selected model
+        _settings.Set(SettingKeys.Settings, _app);
+    }
 
     public AppSettings App => _app;
 }

@@ -22,4 +22,14 @@ public partial class SettingsView : UserControl
     {
         if (sender is Button b && b.Tag is string hex) ViewModel?.SetAccent(hex);
     }
+
+    private void ImportFromFile_Click(object sender, RoutedEventArgs e)
+    {
+        var dlg = new Microsoft.Win32.OpenFileDialog
+        {
+            Filter = "Config files (*.json;*.jsonc)|*.json;*.jsonc|All files (*.*)|*.*",
+            Title = "Import endpoint configuration",
+        };
+        if (dlg.ShowDialog() == true) ViewModel?.ImportFromFile(dlg.FileName);
+    }
 }
