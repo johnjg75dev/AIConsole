@@ -90,6 +90,7 @@ Rounded card on code-surface; monospace `Cascadia Code → Consolas → Courier 
 - **Bubbles:** user right / assistant left; **name (model or "You") + timestamp under bubble**; hover **Copy** + **Remove-from-history** icons; identical commands in right-click **context menu**.
 - **Markdown:** Markdig advanced extensions (tables, lists, code, links-open-externally).
 - **Settings → Endpoints:** add name + Base URL + optional API key → on save auto-fetch `GET {base}/v1/models`; per-model checkboxes + tri-state **Select All**; per-endpoint **"Always show all models"** toggle; background `PeriodicTimer` refresh (default 6h, configurable) keeps picker current; manual model add.
+- **Import configurations from other installations:** `ConfigImporter` scans known locations and parses **OpenCode** (`opencode.json/.jsonc`, incl. `{env:VAR}` keys + `auth.json`, `@ai-sdk/openai-compatible` providers), **Continue** (`~/.continue/config.json`), **Zed** (`language_models.openai_compatible`), a **manual JSON/JSONC file pick**, a generic `{baseUrl,apiKey,models}` shape, and **local-server auto-detection** (Ollama `:11434`, LM Studio `:1234`, `:8080/:5000/:8000`); imports land as OpenAI-compatible endpoints.
 - **Extras:** start-with-Windows; single instance; API keys DPAPI-encrypted; self-contained single-file publish profile.
 
 ## Implementation Order

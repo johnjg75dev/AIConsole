@@ -176,7 +176,7 @@ public partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     public void SelectAll(EndpointVm vm)
     {
-        bool target = vm.AllSelected != true; // null/false → true
+        bool target = !(vm.Models.Count > 0 && vm.Models.All(m => m.IsEnabled)); // all on → off; else → on
         foreach (var m in vm.Models) m.IsEnabled = target;
         _endpoints.SetAllEnabled(vm.Id, target);
         vm.RefreshAllSelected();
@@ -200,7 +200,11 @@ public partial class SettingsViewModel : ObservableObject
         _app.ShowLineNumbers = value; Markdown.MarkdownRenderer.ShowLineNumbers = value; Save(); _chat.RebuildModels();
     }
 
-    partial void OnCodeFontChanged(string value) { _app.CodeFont = value; Save(); }
+    partial void OnCodeFontChanged(string value)
+    {
+        _app.CodeFont = value; Save();
+        try { System.Windows.Application.Current.Resources["FontMono"] = new System.Windows.Media.FontFamily(value + ", Cascadia Code, Consolas, Courier New"); } catch { }
+    }
     partial void OnPanelAcrylicChanged(bool value) { _app.PanelAcrylic = value; Save(); }
     partial void OnHideOnFocusLossChanged(bool value) { _app.HideOnFocusLoss = value; Save(); }
     partial void OnSlideEdgeChanged(string value) { if (Enum.TryParse<SlideEdge>(value, out var e)) { _app.SlideEdge = e; Save(); } }

@@ -42,6 +42,7 @@ public partial class ChatBubble : UserControl
             StreamingText.SetResourceReference(TextBlock.ForegroundProperty, "BubbleAssistantTextBrush");
         }
         Bubble.BorderThickness = new Thickness(1);
+        if (Bubble.ContextMenu is not null) Bubble.ContextMenu.DataContext = vm;
 
         UpdateStreaming(vm.IsStreaming, vm.RawMarkdown);
         vm.PropertyChanged += (_, e) =>

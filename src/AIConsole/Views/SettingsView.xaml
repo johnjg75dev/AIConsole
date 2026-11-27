@@ -54,7 +54,7 @@
                                 <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}"
                                         BorderThickness="1" CornerRadius="8" Padding="8" Margin="0,4,0,8">
                                     <StackPanel>
-                                        <CheckBox Content="Select all" IsThreeState="True" IsChecked="{Binding AllSelected}"
+                                        <CheckBox Content="Select all" IsThreeState="True" IsChecked="{Binding AllSelected, Mode=OneWay}"
                                                   FontWeight="SemiBold" FontSize="12" Margin="0,0,0,4"
                                                   Command="{Binding DataContext.SelectAllCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                   CommandParameter="{Binding}"/>
