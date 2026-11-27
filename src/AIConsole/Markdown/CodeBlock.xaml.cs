@@ -31,7 +31,7 @@ public partial class CodeBlock : UserControl
     /// <summary>Copy button icon can be any glyph; text set by caller. Default "Copy".</summary>
     public bool ShowLineNumbers { get; set; } = true;
 
-    private void Copy() => Clipboard.SetText(_code);
+    private void Copy() { try { Clipboard.SetText(_code); } catch { } }
 
     private void Rebuild()
     {

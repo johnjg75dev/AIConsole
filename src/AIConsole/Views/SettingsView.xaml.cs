@@ -12,15 +12,23 @@ public partial class SettingsView : UserControl
     public SettingsView()
     {
         InitializeComponent();
-        Loaded += (_, _) =>
-        {
-            if (HotkeyCapture is not null && ViewModel is { } vm)
-            {
-                HotkeyCapture.Value = Hotkey.Parse(vm.HotkeyText);
-                HotkeyCapture.ValueChanged += hk => vm.SetHotkey(hk);
-            }
-        };
+        Loaded += OnLoaded;
+        Unloaded += OnUnloaded;
     }
+
+    private void OnLoaded(object sender, RoutedEventArgs e)
+    {
+        if (HotkeyCapture is null || ViewModel is not { } vm) return;
+        HotkeyCapture.Value = Hotkey.Parse(vm.HotkeyText);
+        HotkeyCapture.ValueChanged += OnHotkeyChanged;
+    }
+
+    private void OnUnloaded(object sender, RoutedEventArgs e)
+    {
+        if (HotkeyCapture is not null) HotkeyCapture.ValueChanged -= OnHotkeyChanged;
+    }
+
+    private void OnHotkeyChanged(Hotkey hk) => ViewModel?.SetHotkey(hk);
 
     private void Accent_Click(object sender, RoutedEventArgs e)
     {

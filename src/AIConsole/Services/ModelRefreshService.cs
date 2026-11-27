@@ -1,4 +1,5 @@
 using AIConsole.Data;
+using System.Windows;
 
 namespace AIConsole.Services;
 
@@ -13,7 +14,14 @@ public sealed class ModelRefreshService : IDisposable
 
     public event Action? ModelsChanged;
 
-    public void NotifyModelsChanged() => ModelsChanged?.Invoke();
+    private void RaiseModelsChanged()
+    {
+        var dispatcher = Application.Current?.Dispatcher;
+        if (dispatcher is null || dispatcher.CheckAccess()) ModelsChanged?.Invoke();
+        else dispatcher.BeginInvoke(new Action(() => ModelsChanged?.Invoke()));
+    }
+
+    public void NotifyModelsChanged() => RaiseModelsChanged();
 
     public ModelRefreshService(EndpointRepo endpoints, OpenAiClient client, SettingsRepo settings)
     {
@@ -37,6 +45,7 @@ public sealed class ModelRefreshService : IDisposable
             using var timer = new PeriodicTimer(TimeSpan.FromMinutes(IntervalMinutes));
             while (await timer.WaitForNextTickAsync(ct).ConfigureAwait(false))
             {
+                timer.Period = TimeSpan.FromMinutes(IntervalMinutes); // pick up settings changes
                 await RefreshAllAsync(ct).ConfigureAwait(false);
             }
         }
@@ -55,7 +64,7 @@ public sealed class ModelRefreshService : IDisposable
             }
             catch { /* keep last known list; retry next tick */ }
         }
-        ModelsChanged?.Invoke();
+        RaiseModelsChanged();
     }
 
     public void Dispose()

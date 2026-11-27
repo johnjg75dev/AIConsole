@@ -49,12 +49,25 @@ public sealed record Hotkey(bool Ctrl, bool Alt, bool Shift, bool Win, Key Key)
         _ => k.ToString(),
     };
 
+    
+
     public static Hotkey Parse(string s)
     {
         try
         {
+            var raw0 = (s ?? "").Trim();
+            if (raw0.Length == 0) return Default;
+
+            bool keyIsPlus = false;
+            string body = raw0;
+            if (raw0 == "+") { keyIsPlus = true; body = ""; }
+            else if (raw0.EndsWith("++")) { keyIsPlus = true; body = raw0.Substring(0, raw0.Length - 2); }
+
             var ctrl = false; var alt = false; var shift = false; var win = false; Key key = Key.OemTilde;
-            foreach (var raw in s.Split('+', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
+            var segments = body.Split('+', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).ToList();
+            string? keyToken = null;
+
+            foreach (var raw in segments)
             {
                 var p = raw.Trim();
                 switch (p.ToLowerInvariant())
@@ -63,33 +76,36 @@ public sealed record Hotkey(bool Ctrl, bool Alt, bool Shift, bool Win, Key Key)
                     case "alt": alt = true; break;
                     case "shift": shift = true; break;
                     case "win": case "windows": case "meta": win = true; break;
-                    default:
-                        key = p.ToLowerInvariant() switch
-                        {
-                            "`" => Key.OemTilde,
-                            "space" => Key.Space,
-                            "esc" or "escape" => Key.Escape,
-                            "enter" or "return" => Key.Return,
-                            "+" => Key.OemPlus,
-                            "-" => Key.OemMinus,
-                            "," => Key.OemComma,
-                            "." => Key.OemPeriod,
-                            "/" => Key.OemQuestion,
-                            ";" => Key.OemSemicolon,
-                            "'" => Key.OemQuotes,
-                            "[" => Key.OemOpenBrackets,
-                            "]" => Key.OemCloseBrackets,
-                            "\\" => Key.OemPipe,
-                            _ => Enum.TryParse<Key>(p, true, out var k) ? k : key,
-                        };
-                        break;
+                    default: keyToken = p; break;
                 }
             }
+
+            if (keyIsPlus) key = Key.OemPlus;
+            else if (keyToken is not null)
+            {
+                key = keyToken.ToLowerInvariant() switch
+                {
+                    "" => Key.OemTilde,
+                    "space" => Key.Space,
+                    "esc" or "escape" => Key.Escape,
+                    "enter" or "return" => Key.Return,
+                    "plus" or "+" => Key.OemPlus,
+                    "-" or "minus" => Key.OemMinus,
+                    "," => Key.OemComma,
+                    "." => Key.OemPeriod,
+                    "/" => Key.OemQuestion,
+                    ";" => Key.OemSemicolon,
+                    "'" => Key.OemQuotes,
+                    "[" => Key.OemOpenBrackets,
+                    "]" => Key.OemCloseBrackets,
+                    _ => Enum.TryParse<Key>(keyToken, true, out var k) ? k : key,
+                };
+            }
+
             return new Hotkey(ctrl, alt, shift, win, key);
         }
         catch { return Default; }
     }
-
     public static Hotkey FromKeyEvent(Key key, ModifierKeys mods)
     {
         if (key is Key.LeftCtrl or Key.RightCtrl or Key.LeftAlt or Key.RightAlt
@@ -126,6 +142,11 @@ public sealed class HotkeyService : IDisposable
     {
         UnregisterHotKey(_hwnd, HotkeyId);
         _current = null;
+        if (!hotkey.HasModifier)
+        {
+            RegistrationFailed?.Invoke("Hotkey needs at least one modifier (Ctrl/Alt/Shift/Win).");
+            return false;
+        }
         var ok = RegisterHotKey(_hwnd, HotkeyId, hotkey.Modifiers, hotkey.VirtualKey);
         if (ok) _current = hotkey;
         else RegistrationFailed?.Invoke($"Couldn't register {hotkey}. Another app may already use it.");

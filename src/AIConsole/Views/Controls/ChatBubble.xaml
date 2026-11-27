@@ -16,7 +16,7 @@
 
             <Grid>
                 <TextBlock x:Name="StreamingText" Visibility="Collapsed" TextWrapping="Wrap" FontSize="13.5"/>
-                <ContentPresenter x:Name="MarkdownHost"/>
+                <ContentPresenter x:Name="MarkdownHost" Content="{Binding Rendered}"/>
             </Grid>
 
             <Border.ContextMenu>

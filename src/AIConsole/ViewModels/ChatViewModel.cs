@@ -36,6 +36,8 @@ public partial class ChatViewModel : ObservableObject
     [ObservableProperty] private bool _showLineNumbers = true;
     [ObservableProperty] private double _sidebarWidth = 210;
 
+    public bool EnterToSend => _appSettings.EnterToSend;
+
     public event Action? MessageAdded;
     public event Action? MessagesChanged;
 
@@ -51,6 +53,8 @@ public partial class ChatViewModel : ObservableObject
     }
 
     // ── conversations ──
+
+    public void RerenderMarkdown() { foreach (var m in Messages) m.RenderMarkdown(); }
 
     public void ReloadConversations()
     {
@@ -70,6 +74,9 @@ public partial class ChatViewModel : ObservableObject
                 Messages.Add(vm);
             }
         }
+        // restore per-conversation model
+        if (value?.Model is { } k && Models.FirstOrDefault(m => m.Key == k) is { } match && SelectedModel?.Key != k)
+            SelectedModel = match;
         MessagesChanged?.Invoke();
     }
 
@@ -113,7 +120,8 @@ public partial class ChatViewModel : ObservableObject
     [RelayCommand]
     public void RebuildModels()
     {
-        var key = SelectedModel?.Key ?? _appSettings.LastModelKey;
+        _appSettings = _settings.Get(SettingKeys.Settings, new AppSettings());
+        var key = SelectedConversation?.Model ?? SelectedModel?.Key ?? _appSettings.LastModelKey;
         Models.Clear();
         foreach (var m in _endpoints.EnabledModels())
             Models.Add(new ModelChoice(m.Key, m.ModelId, m.EndpointName));
@@ -123,9 +131,9 @@ public partial class ChatViewModel : ObservableObject
     partial void OnSelectedModelChanged(ModelChoice? value)
     {
         if (value is null) return;
-        var s = _settings.Get(SettingKeys.Settings, new AppSettings());
-        s.LastModelKey = value.Key;
-        _settings.Set(SettingKeys.Settings, s);
+        _appSettings = _settings.Get(SettingKeys.Settings, new AppSettings());
+        _appSettings.LastModelKey = value.Key;
+        _settings.Set(SettingKeys.Settings, _appSettings);
         if (SelectedConversation is { } c) { _chat.SetModel(c.Id, value.Key); c.Model = value.Key; }
     }
 
@@ -143,56 +151,58 @@ public partial class ChatViewModel : ObservableObject
             return;
         }
 
-        var endpointKey = model.Key.Split("::", 2);
-        var ep = _endpoints.Get(endpointKey[0]);
-        if (ep is null) { StatusMessage = "Endpoint not found."; return; }
-
-        InputText = "";
-        StatusMessage = "";
-
-        // ensure conversation
-        if (SelectedConversation is null)
-        {
-            var title = text.Length <= 42 ? text : text[..42] + "…";
-            SelectedConversation = _chat.Create(new Conversation { Title = title, Model = model.Key });
-            Conversations.Insert(0, SelectedConversation);
-        }
-        var convId = SelectedConversation.Id;
-
-        // user message
-        var userVm = new MessageViewModel(true, "You") { RawMarkdown = text };
-        userVm.RenderMarkdown();
-        var userMsg = _chat.Add(new ChatMessage
-        {
-            ConversationId = convId, Role = ChatRole.User, Content = text,
-            Participant = "You", ModelId = model.Key,
-        });
-        userVm.Id = userMsg.Id;
-        Hook(userVm);
-        Messages.Add(userVm);
-        MessageAdded?.Invoke();
-
-        // assistant placeholder
-        var assistantVm = new MessageViewModel(false, model.ModelId) { IsStreaming = true };
-        Messages.Add(assistantVm);
-        MessageAdded?.Invoke();
-
-        // history payload
-        var history = _chat.Messages(convId)
-            .Where(m => !m.Content.StartsWith("\u0000"))
-            .Select(m => new ChatMessageDto(
-                m.Role switch { ChatRole.User => "user", ChatRole.Assistant => "assistant", _ => "system" },
-                m.Content))
-            .ToList();
-        // drop the just-added empty assistant turn (not persisted yet) — history already excludes it
-
-        _cts = new CancellationTokenSource();
-        var token = _cts.Token;
-        IsStreaming = true;
+        string? convId = null;
+        MessageViewModel? assistantVm = null;
         var sb = new System.Text.StringBuilder();
 
         try
         {
+            var endpointKey = model.Key.Split("::", 2);
+            var ep = _endpoints.Get(endpointKey[0]);
+            if (ep is null) { StatusMessage = "Endpoint not found."; return; }
+
+            InputText = "";
+            StatusMessage = "";
+
+            // ensure conversation
+            if (SelectedConversation is null)
+            {
+                var title = text.Length <= 42 ? text : text[..42] + "…";
+                SelectedConversation = _chat.Create(new Conversation { Title = title, Model = model.Key });
+                Conversations.Insert(0, SelectedConversation);
+            }
+            convId = SelectedConversation.Id;
+
+            // user message
+            var userVm = new MessageViewModel(true, "You") { RawMarkdown = text };
+            userVm.RenderMarkdown();
+            var userMsg = _chat.Add(new ChatMessage
+            {
+                ConversationId = convId, Role = ChatRole.User, Content = text,
+                Participant = "You", ModelId = model.Key,
+            });
+            userVm.Id = userMsg.Id;
+            Hook(userVm);
+            Messages.Add(userVm);
+            MessageAdded?.Invoke();
+
+            // assistant placeholder
+            assistantVm = new MessageViewModel(false, model.ModelId) { IsStreaming = true };
+            Hook(assistantVm);
+            Messages.Add(assistantVm);
+            MessageAdded?.Invoke();
+
+            // history payload (user msg persisted; assistant not yet)
+            var history = _chat.Messages(convId)
+                .Select(m => new ChatMessageDto(
+                    m.Role switch { ChatRole.User => "user", ChatRole.Assistant => "assistant", _ => "system" },
+                    m.Content))
+                .ToList();
+
+            _cts = new CancellationTokenSource();
+            var token = _cts.Token;
+            IsStreaming = true;
+
             await foreach (var delta in _client.StreamChatAsync(ep.BaseUrl, ep.ApiKey, model.ModelId, history, token))
             {
                 sb.Append(delta);
@@ -203,37 +213,30 @@ public partial class ChatViewModel : ObservableObject
             assistantVm.IsStreaming = false;
             assistantVm.RenderMarkdown();
 
-            var saved = _chat.Add(new ChatMessage
-            {
-                ConversationId = convId, Role = ChatRole.Assistant,
-                Content = sb.ToString(), ModelId = model.Key, Participant = model.ModelId,
-            });
-            assistantVm.Id = saved.Id;
+            PersistAssistant(convId, sb.ToString(), model, assistantVm);
             ReloadConversationsOrder();
         }
         catch (OperationCanceledException)
         {
             // keep partial output
-            assistantVm.RawMarkdown = sb.ToString();
-            assistantVm.IsStreaming = false;
-            assistantVm.RenderMarkdown();
-            if (sb.Length > 0)
+            if (assistantVm is not null)
             {
-                var saved = _chat.Add(new ChatMessage
-                {
-                    ConversationId = convId, Role = ChatRole.Assistant,
-                    Content = sb.ToString(), ModelId = model.Key, Participant = model.ModelId,
-                });
-                assistantVm.Id = saved.Id;
+                assistantVm.RawMarkdown = sb.ToString();
+                assistantVm.IsStreaming = false;
+                assistantVm.RenderMarkdown();
+                if (sb.Length > 0 && convId is not null) PersistAssistant(convId, sb.ToString(), model, assistantVm);
+                else RemoveVm(assistantVm);
             }
-            else RemoveVm(assistantVm);
             ReloadConversationsOrder();
         }
         catch (Exception ex)
         {
-            assistantVm.IsStreaming = false;
-            if (sb.Length > 0) { assistantVm.RawMarkdown = sb.ToString(); assistantVm.RenderMarkdown(); }
-            else RemoveVm(assistantVm);
+            if (assistantVm is not null)
+            {
+                assistantVm.IsStreaming = false;
+                if (sb.Length > 0) { assistantVm.RawMarkdown = sb.ToString(); assistantVm.RenderMarkdown(); }
+                else RemoveVm(assistantVm);
+            }
             StatusMessage = ex.Message;
         }
         finally
@@ -242,6 +245,20 @@ public partial class ChatViewModel : ObservableObject
             _cts?.Dispose(); _cts = null;
             MessagesChanged?.Invoke();
         }
+    }
+
+    private void PersistAssistant(string convId, string content, ModelChoice model, MessageViewModel vm)
+    {
+        try
+        {
+            var saved = _chat.Add(new ChatMessage
+            {
+                ConversationId = convId, Role = ChatRole.Assistant,
+                Content = content, ModelId = model.Key, Participant = model.ModelId,
+            });
+            vm.Id = saved.Id;
+        }
+        catch { /* keep streamed output visible even if persistence fails */ }
     }
 
     [RelayCommand]

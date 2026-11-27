@@ -12,9 +12,10 @@ public partial class ModelItemVm : ObservableObject
     public long RowId { get; init; }
     public string ModelId { get; init; } = "";
     [ObservableProperty] private bool _isEnabled;
+    public bool Suppress;
     private readonly Action<ModelItemVm> _onChanged;
     public ModelItemVm(Action<ModelItemVm> onChanged) => _onChanged = onChanged;
-    partial void OnIsEnabledChanged(bool value) => _onChanged(this);
+    partial void OnIsEnabledChanged(bool value) { if (!Suppress) _onChanged(this); }
 }
 
 public partial class EndpointVm : ObservableObject
@@ -71,6 +72,9 @@ public partial class SettingsViewModel : ObservableObject
 
     public event Action<string>? Status;
 
+    [ObservableProperty] private string _statusText = "";
+    private void Emit(string msg) { StatusText = msg; Status?.Invoke(msg); }
+
     // ── import from other tools ──
     public ObservableCollection<Services.ImportedEndpoint> Imports { get; } = new();
     private readonly Services.ConfigImporter _importer;
@@ -104,7 +108,8 @@ public partial class SettingsViewModel : ObservableObject
             };
             foreach (var m in _endpoints.ModelsFor(e.Id))
             {
-                var item = new ModelItemVm(OnModelToggled) { RowId = m.Id, ModelId = m.ModelId, IsEnabled = m.Enabled };
+                var item = new ModelItemVm(OnModelToggled) { RowId = m.Id, ModelId = m.ModelId, Suppress = true };
+                item.IsEnabled = m.Enabled; item.Suppress = false;
                 vm.Models.Add(item);
             }
             vm.RefreshAllSelected();
@@ -123,7 +128,7 @@ public partial class SettingsViewModel : ObservableObject
     public async Task SaveEndpointAsync(EndpointVm vm)
     {
         if (string.IsNullOrWhiteSpace(vm.Name)) vm.Name = "Endpoint";
-        if (string.IsNullOrWhiteSpace(vm.BaseUrl)) { Status?.Invoke("Base URL is required."); return; }
+        if (string.IsNullOrWhiteSpace(vm.BaseUrl)) { Emit("Base URL is required."); return; }
 
         var ep = new Endpoint
         {
@@ -140,12 +145,12 @@ public partial class SettingsViewModel : ObservableObject
             _endpoints.SyncModels(ep.Id, models, autoEnable: vm.ShowAllModels, prune: true);
             Reload();
             _refresh.NotifyModelsChanged();
-            Status?.Invoke($"Loaded {models.Count} model(s).");
+            Emit($"Loaded {models.Count} model(s).");
         }
         catch (Exception ex)
         {
             Reload();
-            Status?.Invoke("Saved, but model fetch failed: " + ex.Message);
+            Emit("Saved, but model fetch failed: " + ex.Message);
         }
         vm.IsBusy = false;
     }
@@ -177,7 +182,7 @@ public partial class SettingsViewModel : ObservableObject
     public void SelectAll(EndpointVm vm)
     {
         bool target = !(vm.Models.Count > 0 && vm.Models.All(m => m.IsEnabled)); // all on → off; else → on
-        foreach (var m in vm.Models) m.IsEnabled = target;
+        foreach (var m in vm.Models) { m.Suppress = true; m.IsEnabled = target; m.Suppress = false; }
         _endpoints.SetAllEnabled(vm.Id, target);
         vm.RefreshAllSelected();
         _refresh.NotifyModelsChanged();
@@ -197,7 +202,7 @@ public partial class SettingsViewModel : ObservableObject
 
     partial void OnShowLineNumbersChanged(bool value)
     {
-        _app.ShowLineNumbers = value; Markdown.MarkdownRenderer.ShowLineNumbers = value; Save(); _chat.RebuildModels();
+        _app.ShowLineNumbers = value; Markdown.MarkdownRenderer.ShowLineNumbers = value; Save(); _chat.RerenderMarkdown();
     }
 
     partial void OnCodeFontChanged(string value)
@@ -231,7 +236,7 @@ public partial class SettingsViewModel : ObservableObject
     {
         Imports.Clear();
         foreach (var i in _importer.ScanKnownLocations()) Imports.Add(i);
-        Status?.Invoke(Imports.Count == 0 ? "No other tool configs found." : $"Found {Imports.Count} importable endpoint(s).");
+        Emit(Imports.Count == 0 ? "No other tool configs found." : $"Found {Imports.Count} importable endpoint(s).");
     }
 
     [RelayCommand]
@@ -239,7 +244,7 @@ public partial class SettingsViewModel : ObservableObject
     {
         Imports.Clear();
         foreach (var i in await _importer.DetectLocalServersAsync()) Imports.Add(i);
-        Status?.Invoke(Imports.Count == 0 ? "No local servers detected." : $"Detected {Imports.Count} local server(s).");
+        Emit(Imports.Count == 0 ? "No local servers detected." : $"Detected {Imports.Count} local server(s).");
     }
 
     [RelayCommand]
@@ -257,7 +262,7 @@ public partial class SettingsViewModel : ObservableObject
         _endpoints.SyncModels(ep.Id, imp.Models, autoEnable: true, prune: false);
         Reload();
         _refresh.NotifyModelsChanged();
-        Status?.Invoke($"Imported '{ep.Name}'.");
+        Emit($"Imported '{ep.Name}'.");
     }
 
     public void ImportFromFile(string path)
@@ -265,14 +270,21 @@ public partial class SettingsViewModel : ObservableObject
         foreach (var i in _importer.ParseConfigFile(path)) ImportEndpoint(i);
     }
 
-    public void SetHotkeyService(HotkeyService hk) => _hotkey = hk;
+    public void SetHotkeyService(HotkeyService hk)
+    {
+        _hotkey = hk;
+        _hotkey.RegistrationFailed += msg => Emit(msg);
+    }
 
     // ── hotkey ──
 
     public void SetHotkey(Hotkey hk)
     {
-        _app.Hotkey = hk.ToString(); HotkeyText = hk.ToString(); Save();
-        _hotkey.Register(hk);
+        if (_hotkey.Register(hk))
+        {
+            _app.Hotkey = hk.ToString(); HotkeyText = hk.ToString(); Save();
+        }
+        else HotkeyText = _hotkey.Current?.ToString() ?? _app.Hotkey; // revert display
     }
 
     private void Save()

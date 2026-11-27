@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Interop;
 using AIConsole.Data;
 using AIConsole.Models;
@@ -74,6 +74,7 @@ public partial class App : Application
 
         var hk = Hotkey.Parse(_appSettings.Hotkey);
         _hotkey.Register(hk);
+        _hotkey.RegistrationFailed += msg => { /* surfaced in Settings UI; keep panel usable */ };
 
         _window.SetShowingSettings(false);
 

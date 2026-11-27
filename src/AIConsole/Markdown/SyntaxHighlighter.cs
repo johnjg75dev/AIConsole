@@ -132,7 +132,7 @@ public static class SyntaxHighlighter
         return n switch
         {
             "keyword" or "controlkeyword" or "pseudokeyword" or "predefined" or "intrinsic" or "builtinvalue" or "languageprefix" => SyntaxKind.Keyword,
-            "string" or "stringcsharpverbatim" or "stringescape" or "jsonstring" or "xmlattributevalue" or "xmlattributequotes"
+            "string" or "stringcsharpverbatim" or "string(c#@verbatim)" or "stringescape" or "jsonstring" or "xmlattributevalue" or "xmlattributequotes"
                 or "csspropertyvalue" or "htmlattributevalue" or "cdatasection" or "xmlcdatasection" => SyntaxKind.String,
             "comment" or "xmlcomment" or "xmldoccomment" or "xmldoctag" or "htmlcomment" or "xmldoc" => SyntaxKind.Comment,
             "number" or "jsonnumber" => SyntaxKind.Number,

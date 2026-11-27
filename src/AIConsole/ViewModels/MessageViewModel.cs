@@ -50,7 +50,7 @@ public partial class MessageViewModel : ObservableObject
     public string SourceText => RawMarkdown;
 
     [RelayCommand]
-    private void Copy() => Clipboard.SetText(RawMarkdown);
+    private void Copy() { try { Clipboard.SetText(RawMarkdown); } catch { } }
 
     [RelayCommand]
     private void Remove() => RemoveRequested?.Invoke(this);

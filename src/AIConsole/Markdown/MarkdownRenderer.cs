@@ -203,10 +203,26 @@ public static class MarkdownRenderer
                 break;
 
             case EmphasisInline em:
-                Span emSpan = em.DelimiterCount >= 2 ? new Bold() : new Italic();
+                Span emSpan;
+                switch (em.DelimiterChar)
+                {
+                    case '~':
+                        if (em.DelimiterCount >= 2) { emSpan = new Span(); emSpan.TextDecorations = System.Windows.TextDecorations.Strikethrough; }
+                        else emSpan = new Span { BaselineAlignment = System.Windows.BaselineAlignment.Subscript, FontSize = 10 };
+                        break;
+                    case '^': emSpan = new Span { BaselineAlignment = System.Windows.BaselineAlignment.Superscript, FontSize = 10 }; break;
+                    case '=' when em.DelimiterCount >= 2: emSpan = new Bold { Foreground = Brush("AccentBrush") }; break;
+                    case '+' when em.DelimiterCount >= 2: emSpan = new Span(); emSpan.TextDecorations = System.Windows.TextDecorations.Underline; break;
+                    default: emSpan = em.DelimiterCount >= 2 ? new Bold() : new Italic(); break;
+                }
+                if (em.DelimiterChar is '*' or '_' && em.DelimiterCount >= 3)
+                {
+                    var bold = new Bold(); var italic = new Italic(); bold.Inlines.Add(italic);
+                    foreach (var child in em) RenderInline(italic.Inlines, child);
+                    target.Add(bold); break;
+                }
                 foreach (var child in em) RenderInline(emSpan.Inlines, child);
-                target.Add(emSpan);
-                break;
+                target.Add(emSpan); break;
 
             case LinkInline link:
                 if (link.IsImage)
@@ -281,7 +297,12 @@ public static class MarkdownRenderer
 
     private static Uri? SafeUri(string? url)
     {
-        try { return new Uri(url ?? "", UriKind.RelativeOrAbsolute); }
+        try
+        {
+            var u = new Uri(url ?? "", UriKind.RelativeOrAbsolute);
+            if (u.IsAbsoluteUri && u.Scheme != Uri.UriSchemeHttp && u.Scheme != Uri.UriSchemeHttps) return null;
+            return u;
+        }
         catch { return null; }
     }
 }

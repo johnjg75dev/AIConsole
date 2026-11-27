@@ -15,14 +15,29 @@ public partial class ChatView : UserControl
         InitializeComponent();
         Loaded += (_, _) => HookVm();
         DataContextChanged += (_, _) => HookVm();
+        Unloaded += (_, _) => Unhook();
     }
+
+    private ChatViewModel? _hookedVm;
 
     private void HookVm()
     {
-        if (ViewModel is null) return;
-        ViewModel.MessageAdded += ScrollToBottom;
-        ViewModel.MessagesChanged += ScrollToBottom;
-        ViewModel.Messages.CollectionChanged += OnMessagesChanged;
+        if (ReferenceEquals(_hookedVm, ViewModel)) return;
+        Unhook();
+        _hookedVm = ViewModel;
+        if (_hookedVm is null) return;
+        _hookedVm.MessageAdded += ScrollToBottom;
+        _hookedVm.MessagesChanged += ScrollToBottom;
+        _hookedVm.Messages.CollectionChanged += OnMessagesChanged;
+    }
+
+    private void Unhook()
+    {
+        if (_hookedVm is null) return;
+        _hookedVm.MessageAdded -= ScrollToBottom;
+        _hookedVm.MessagesChanged -= ScrollToBottom;
+        _hookedVm.Messages.CollectionChanged -= OnMessagesChanged;
+        _hookedVm = null;
     }
 
     private void OnMessagesChanged(object? sender, NotifyCollectionChangedEventArgs e) => ScrollToBottom();
@@ -44,14 +59,15 @@ public partial class ChatView : UserControl
         if (e.Key == Key.Return && Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
         { e.Handled = true; await Send(); return; }
 
-        // Enter sends (when no shift), unless VM prefers not
-        if (e.Key == Key.Return && !Keyboard.Modifiers.HasFlag(ModifierKeys.Shift))
+        // Enter sends (when no shift) if EnterToSend; otherwise only Ctrl+Enter sends
+        if (e.Key == Key.Return && !Keyboard.Modifiers.HasFlag(ModifierKeys.Shift) && vm.EnterToSend)
         { e.Handled = true; await Send(); return; }
     }
 
     private async Task Send()
     {
-        if (ViewModel is { } vm) await vm.SendCommand.ExecuteAsync(null);
+        try { if (ViewModel is { } vm) await vm.SendCommand.ExecuteAsync(null); }
+        catch { /* SendAsync reports via StatusMessage */ }
     }
 
     private void Conversation_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
