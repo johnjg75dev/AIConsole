@@ -109,6 +109,13 @@ def version_properties(version: dict) -> list[str]:
     ]
 
 
+def msbuild_properties(kind: str = "dev") -> None:
+    """Used by Directory.Build.targets: bump and emit one parseable line."""
+    version = bump(load_version(), kind)
+    save_version(version)
+    print(f"{semver(version)}|{numeric_version(version)}")
+
+
 # ── process helpers ────────────────────────────────────────────────────────
 
 def run(command: list[str], *, check: bool = True) -> subprocess.CompletedProcess:
@@ -133,7 +140,7 @@ def build(kind: str = "dev") -> None:
     configuration = "Debug" if kind == "dev" else "Release"
     run([
         "dotnet", "build", str(SOLUTION), "--nologo",
-        f"-c", configuration, *version_properties(version),
+        f"-c", configuration, *version_properties(version), "-p:AutoVersion=0",
     ])
     print(f"\nBuilt {configuration} {semver(version)} ({numeric_version(version)})")
 
@@ -150,7 +157,7 @@ def publish(rid: str | None = None, out: Path | None = None, *, do_bump: bool = 
     command = [
         "dotnet", "publish", str(PROJECT),
         "-p:PublishProfile=SingleFile", "--nologo",
-        *version_properties(version),
+        *version_properties(version), "-p:AutoVersion=0",
     ]
     if rid:
         command.append(f"-p:RuntimeIdentifier={rid}")
@@ -167,7 +174,7 @@ def publish(rid: str | None = None, out: Path | None = None, *, do_bump: bool = 
 
 
 def test() -> None:
-    run(["dotnet", "test", str(SOLUTION), "--nologo"])
+    run(["dotnet", "test", str(SOLUTION), "--nologo", "-p:AutoVersion=0"])
 
 
 def debug() -> None:
@@ -175,7 +182,7 @@ def debug() -> None:
     version = load_version()
     run([
         "dotnet", "run", "--project", str(PROJECT), "-c", "Debug",
-        "--no-build", *version_properties(version),
+        "--no-build", *version_properties(version), "-p:AutoVersion=0",
     ])
 
 
@@ -365,6 +372,11 @@ def main() -> None:
 
     commands.add_parser("version", help="print the current version")
 
+    p_msbuild = commands.add_parser(
+        "msbuild-props", help="bump the version and emit MSBuild properties"
+    )
+    p_msbuild.add_argument("--kind", choices=BUMP_KINDS, default="dev")
+
     p_installers = commands.add_parser("installers", help="build MSI installers")
     p_installers.add_argument("--artifacts", type=Path, default=DIST)
     p_installers.add_argument("--out", type=Path, default=DIST / "installers")
@@ -390,6 +402,8 @@ def main() -> None:
         print(semver(version))
         print(numeric_version(version))
         print(tag_name(version))
+    elif args.command == "msbuild-props":
+        msbuild_properties(args.kind)
     elif args.command == "installers":
         build_installers(args.artifacts, args.out)
 

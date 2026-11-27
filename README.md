@@ -66,10 +66,13 @@ Version state lives in `version.json` (`dev` builds increment the revision, `rc`
 version. Release builds publish `win-x64`, `win-x86`, and `win-arm64` standalones plus per-user MSI
 installers into `dist/`.
 
-Raw `dotnet` commands still work:
+Raw `dotnet` commands still work, and a plain `dotnet build` automatically bumps the version first
+(`Directory.Build.targets` runs `compile.py msbuild-props` before compiling). Override the bump with
+`-p:VersionKind=rc|patch|minor|major`, or disable it with `-p:AutoVersion=0`.
 
 ```powershell
 dotnet build AIConsole.slnx
+dotnet build AIConsole.slnx -p:VersionKind=rc
 dotnet test  AIConsole.slnx
 dotnet publish src/AIConsole/AIConsole.csproj -p:PublishProfile=SingleFile
 ```

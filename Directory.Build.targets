@@ -1,0 +1,30 @@
+<Project>
+  <!--
+    Plain `dotnet build` bumps version.json before compiling. compile.py passes
+    -p:AutoVersion=0 because it already manages versioning, so nothing double-bumps.
+    Override the bump with: dotnet build -p:VersionKind=rc|patch|minor|major
+  -->
+  <PropertyGroup>
+    <VersionKind Condition="'$(VersionKind)' == ''">dev</VersionKind>
+  </PropertyGroup>
+
+  <Target Name="AutoVersionBuild"
+          BeforeTargets="BeforeBuild"
+          Condition="'$(MSBuildProjectName)' == 'AIConsole' and '$(AutoVersion)' != '0' and '$(DesignTimeBuild)' != 'true'">
+    <Exec Command="python &quot;$(MSBuildThisFileDirectory)compile.py&quot; msbuild-props --kind $(VersionKind)"
+          ConsoleToMSBuild="true"
+          StandardOutputImportance="Low">
+      <Output TaskParameter="ConsoleOutput" ItemName="_AIConsoleVersionLine" />
+    </Exec>
+
+    <PropertyGroup>
+      <_AIConsoleVersionText>@(_AIConsoleVersionLine)</_AIConsoleVersionText>
+      <Version>$([System.String]::Copy('$(_AIConsoleVersionText)').Split('|')[0])</Version>
+      <AssemblyVersion>$([System.String]::Copy('$(_AIConsoleVersionText)').Split('|')[1])</AssemblyVersion>
+      <FileVersion>$(AssemblyVersion)</FileVersion>
+      <InformationalVersion>$(Version)</InformationalVersion>
+    </PropertyGroup>
+
+    <Message Importance="high" Text="AIConsole auto-version: $(Version) ($(AssemblyVersion))" />
+  </Target>
+</Project>
