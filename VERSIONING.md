@@ -5,6 +5,25 @@ The build scripts and CI workflows are the authority; do not invent parallel ver
 
 ---
 
+## 0. Mandatory entry point
+
+**Always start from the interactive script.** Double-click `compile.bat` (Windows) or run
+`./compile.ps1` / `python compile.py`. Use its menu to select the correct version bump before any
+local compile, publish, or release:
+
+- **1 / 2 / 3 / 4 / 5** — dev, RC, patch, minor, or major build. This is how you “properly version”
+  a change. The script increments `version.json` and stamps the binaries automatically.
+- **6** — publish a single-file EXE with a new build number.
+- **9** — local release (no GitHub release).
+- **10** — release with a pushed tag; GitHub Actions creates the release.
+- **11** — review or correct `version.json` only when fixing a mistake. Do not hand-edit the file.
+
+The CLI examples later in this document exist for CI and automation. **Do not substitute bare
+`dotnet build` / `dotnet publish` commands for the menu during local development**; the menu is the
+supported way to guarantee every compilation receives the right version.
+
+---
+
 ## 1. Source of truth
 
 `version.json` at the repository root is the **only** place where the version is stored.
@@ -19,8 +38,9 @@ The build scripts and CI workflows are the authority; do not invent parallel ver
 }
 ```
 
-Never hand-edit version numbers in `.csproj`, generated binaries, or MSI metadata. Change them
-through `compile.py` or through the MSBuild hook described below.
+Never hand-edit version numbers in `.csproj`, generated binaries, or MSI metadata. In normal
+development, change them through the **interactive menu (section 0)**. The MSBuild hook exists for
+people who insist on a plain `dotnet build`; it is not the preferred workflow.
 
 Generated values:
 
@@ -38,13 +58,13 @@ Generated values:
 
 Choose the bump that matches the change. **Every compile must produce a new version.**
 
-| Situation | Required bump | Command | Result |
-|---|---|---|---|
-| Normal development / daily builds | `dev` | `python compile.py build --kind dev` | `1.0.0-dev.6` |
-| Preview / candidate for an upcoming release | `rc` | `python compile.py build --kind rc` | `1.0.0-rc.7` |
-| Bug-fix release | `patch` | `python compile.py release --bump patch` | `v1.0.1` |
-| New backward-compatible feature | `minor` | `python compile.py release --bump minor` | `v1.1.0` |
-| Breaking change | `major` | `python compile.py release --bump major` | `v2.0.0` |
+| Situation | Required bump | Menu option | CLI equivalent (CI only) | Result |
+|---|---|---|---|---|
+| Normal development / daily builds | `dev` | **1** | `python compile.py build --kind dev` | `1.0.0-dev.6` |
+| Preview / candidate for an upcoming release | `rc` | **2** | `python compile.py build --kind rc` | `1.0.0-rc.7` |
+| Bug-fix release | `patch` | **3** or **9** | `python compile.py release --bump patch` | `v1.0.1` |
+| New backward-compatible feature | `minor` | **4** or **9** | `python compile.py release --bump minor` | `v1.1.0` |
+| Breaking change | `major` | **5** or **9** | `python compile.py release --bump major` | `v2.0.0` |
 
 Rules:
 
@@ -57,9 +77,10 @@ Rules:
 
 ## 3. Developer workflow
 
-### 3.1 Interactive driver (preferred)
+### 3.1 Interactive driver (required locally)
 
-Double-click **`compile.bat`**, or run `./compile.ps1` / `python compile.py`. The menu covers:
+Double-click **`compile.bat`**, or run `./compile.ps1` / `python compile.py`. Pick the menu item
+that matches your change — that selection is the versioning step. The menu covers:
 
 ```text
  1  Dev build            (new build number)

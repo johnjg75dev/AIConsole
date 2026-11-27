@@ -50,8 +50,9 @@ Settings → **Import from other tools**:
 
 All versioning and release rules are documented in **[VERSIONING.md](VERSIONING.md)**.
 
-Double-click **`compile.bat`** (or run `./compile.ps1`) for an interactive menu covering dev builds,
-RC builds, patch/minor/major bumps, publishing, tests, debugging, and releases. Python 3 is required.
+Double-click **`compile.bat`** (or run `./compile.ps1`) for the interactive menu covering dev builds,
+RC builds, patch/minor/major bumps, publishing, tests, debugging, and releases. **Use the menu as the
+normal path — selecting its version option is what properly versions your change.** Python 3 is required.
 
 ```powershell
 python compile.py                                  # interactive menu
