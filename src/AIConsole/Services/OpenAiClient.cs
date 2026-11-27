@@ -10,7 +10,7 @@ namespace AIConsole.Services;
 
 public sealed record ChatMessageDto(
     [property: JsonPropertyName("role")] string Role,
-    [property: JsonPropertyName("content")] string Content);
+    [property: JsonPropertyName("content")] object Content);
 
 /// <summary>Minimal client for any OpenAI-compatible server (/models + /chat/completions, SSE streaming).</summary>
 public sealed class OpenAiClient : IDisposable
@@ -100,6 +100,42 @@ public sealed class OpenAiClient : IDisposable
             var text = ExtractFullMessage(raw.ToString());
             if (text is not null) yield return text;
         }
+    }
+
+    public async Task<string> DecideAsync(string baseUrl, string? apiKey, string model, string state,
+        string type, string instructions, IReadOnlyList<string> criteria, CancellationToken ct = default)
+    {
+        var question = new Dictionary<string, object> { ["type"] = type, ["instructions"] = instructions };
+        if (type == "choice")
+        {
+            var choices = new Dictionary<string, string>();
+            foreach (var line in criteria)
+            {
+                var parts = line.Split('=', 2, StringSplitOptions.TrimEntries);
+                if (parts[0].Length == 0 || !choices.TryAdd(parts[0], parts.Length == 2 ? parts[1] : parts[0]))
+                    throw new ArgumentException("Choice names must be nonempty and unique.");
+            }
+            question["criteria"] = choices;
+        }
+        else if (type == "score") question["criteria"] = criteria;
+        object stateValue = state;
+        try
+        {
+            using var parsed = JsonDocument.Parse(state);
+            if (parsed.RootElement.ValueKind is JsonValueKind.Object or JsonValueKind.Array)
+                stateValue = parsed.RootElement.Clone();
+        }
+        catch (JsonException) { /* plain text state */ }
+        var payload = new { model, state = stateValue, questions = new Dictionary<string, object> { ["decision"] = question } };
+        using var req = new HttpRequestMessage(HttpMethod.Post, CombineUrl(baseUrl, "systemone"));
+        ApplyAuth(req, apiKey);
+        req.Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+        using var resp = await _http.SendAsync(req, ct).ConfigureAwait(false);
+        var body = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+        if (!resp.IsSuccessStatusCode)
+            throw new InvalidOperationException($"HTTP {(int)resp.StatusCode} {resp.ReasonPhrase}: {Truncate(body, 400)}");
+        try { using var json = JsonDocument.Parse(body); return JsonSerializer.Serialize(json.RootElement, new JsonSerializerOptions { WriteIndented = true }); }
+        catch (JsonException) { return body; }
     }
 
     private static string? ExtractDelta(string json)
