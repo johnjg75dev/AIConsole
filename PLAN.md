@@ -2,107 +2,134 @@
 
 ## Overview
 
-A **.NET 10 WPF Windows tray application**. A global hotkey (default **Ctrl+`**, remappable) slides a minimalist AI chat panel down from the top of the screen (optional **side slide-out**). Conversations, chat history, endpoints, model selection, **and all settings persist in SQLite**. Native WPF Markdown rendering, **syntax highlighting + line numbers** in code blocks, token-by-token **SSE streaming**, OpenAI-compatible endpoint management with auto-discovered models, and a **live theme engine** with creative built-in palettes.
+A **.NET 10 WPF Windows tray application**. A global hotkey (default **Ctrl+`**, remappable) slides a minimalist AI chat panel down from the top of the screen (optional **side slide-out**). Conversations, chat history, endpoints, model selection, and all settings persist in SQLite. Native WPF Markdown rendering, syntax highlighting + line numbers, token-by-token SSE streaming, OpenAI-compatible endpoint management with auto-discovered models, and a live theme engine with built-in palettes.
 
-**Tech:** C# / WPF `net10.0-windows`, CommunityToolkit.Mvvm, Hardcodet.NotifyIcon.Wpf (tray), Markdig (markdown), Microsoft.Data.Sqlite (all persistence), ColorCode.Core (syntax-highlighting grammars; thin WPF sink maps token styles to theme brushes; built-in regex fallback), Win32 `RegisterHotKey`, DPAPI (API-key encryption), DwmSetWindowAttribute (Acrylic/Mica backdrop, graceful fallback).
+**Tech:** C# / WPF `net10.0-windows`, CommunityToolkit.Mvvm, Hardcodet.NotifyIcon.Wpf (tray), Markdig (markdown), Microsoft.Data.Sqlite (all persistence), ColorCode.Core (syntax highlighting), Win32 `RegisterHotKey`, DPAPI (API-key encryption), DwmSetWindowAttribute (acrylic backdrop).
 
 ## Project Structure
 
 ```
-AIConsole.sln
-PLAN.md
-src/AIConsole/                     # net10.0-windows WPF app
+AIConsole.slnx
+PLAN.md / VERSIONING.md / compile.py / compile.bat / compile.ps1
+src/AIConsole/
 ├── App.xaml(.cs)                  # single-instance mutex, DI wiring, tray bootstrapping
-├── Models/                        # POCOs: Conversation, ChatMessage, Endpoint, ModelInfo, AppSettings
-├── Data/                          # SQLite (Microsoft.Data.Sqlite, plain ADO)
-│   ├── Db.cs                      # connection mgmt + schema/migrations
-│   ├── SettingsRepo.cs            # settings table (JSON values), DPAPI-encrypted API keys
-│   ├── EndpointRepo.cs            # endpoints + discovered models
-│   └── ChatRepo.cs                # conversations + messages
-├── Services/
-│   ├── OpenAiClient.cs            # GET {base}/v1/models (auto-fetch), POST chat/completions SSE → IAsyncEnumerable
-│   ├── ModelRefreshService.cs     # PeriodicTimer background refresh of "always show all" endpoints
-│   ├── HotkeyService.cs           # RegisterHotKey + HwndSource hook (default MOD_CONTROL + VK_OEM_3)
-│   ├── TrayService.cs             # NotifyIcon: toggle / new chat / settings / quit
-│   ├── ThemeManager.cs            # swap merged dictionaries live, persist choice/accent, follow-Windows mode
-│   ├── StartupService.cs          # HKCU Run-key start-with-Windows
-│   └── Dpapi.cs                   # ProtectedData for API keys
-├── ViewModels/                    # CommunityToolkit.Mvvm
-│   ├── ShellViewModel.cs          # slide state, view switching (Chat ↔ Settings)
-│   ├── ChatViewModel.cs           # conversations, send/stop streaming, model picker
-│   ├── MessageViewModel.cs        # markdown blocks, name, timestamp, copy/delete
-│   └── SettingsViewModel.cs       # endpoint editor, model checkboxes, select-all, appearance
+├── Models/                        # POCOs + AppSettings
+├── Data/                          # SQLite repositories + schema migrations
+├── Services/                      # OpenAI client, hotkey, tray, themes, DPAPI, placement
+├── ViewModels/                    # Chat, Message, Attachment, Settings
 ├── Views/
-│   ├── MainWindow.xaml            # borderless transparent popup; slide animation; acrylic
-│   ├── ChatView.xaml              # bubbles, sidebar, input
-│   ├── SettingsView.xaml          # endpoints & models + appearance
-│   └── Controls/
-│       ├── ChatBubble.xaml(.cs)   # bubble + name/timestamp + hover icons + context menu
-│       ├── HotkeyBox.xaml(.cs)    # key-capture control
-│       └── ThemeCard.xaml         # theme picker swatch card
-├── Markdown/
-│   ├── MarkdownRenderer.cs        # Markdig AST → WPF blocks/inlines (headings, lists, quotes, tables, links, code)
-│   ├── CodeBlock.xaml(.cs)        # card: header (language + copy) + line-number gutter + highlighted code
-│   └── SyntaxHighlighter.cs       # tokenizer → theme brushes; ColorCode.Core grammars + regex fallback
-├── Themes/
-│   ├── Tokens.xaml                # shared styles: radii, spacing, fonts, glyphs, control templates
-│   └── Palettes/                  # one ResourceDictionary per theme (see below)
-└── Assets/                        # tray icon .ico, glyphs
+│   ├── MainWindow.xaml            # borderless transparent slide panel
+│   ├── ChatView.xaml              # sidebar, transcript, composer
+│   ├── SettingsView.xaml          # responsive tabbed settings
+│   └── Controls/                  # ChatBubble, ModelPicker, HotkeyBox, BoundPasswordBox, ResponsiveColumnsPanel
+├── Markdown/                      # Markdig → WPF, CodeBlock, SyntaxHighlighter
+├── Themes/                        # Tokens + palettes
+└── Assets/                        # tray icon
+tests/AIConsole.Tests/
+installer/Product.wxs              # WiX v4 per-user MSI
+.github/workflows/                 # lint + build + tag release
 ```
 
-## Themes
+## Current Roadmap
 
-Token-based resource dictionaries swapped at runtime via `ThemeManager`; everything binds `DynamicResource`, applies live, persisted in SQLite. Each palette defines backgrounds/surfaces/borders, text + dim text, user-bubble gradient start/end, assistant surface, accent primary/secondary, success/error/warning, and a full **syntax palette** (keyword, string, comment, number, type, function, operator, tag, property, punctuation) — dark palettes get dark code surfaces, light palettes light ones.
+### 1. Concurrent conversation streams
 
-**Built-in palettes:** Midnight Neon (default dark: deep navy + violet/cyan), Cyber Glass (acrylic + magenta/cyan neon), Ember (warm charcoal + sunset orange/rose), Nord, Forest, Solar Flare (light warm), Clean Day (light).
+- Per-conversation stream sessions: assistant VM, cancellation token, buffer.
+- Switching conversations must not cancel or discard a running reply.
+- Composer send/stop state reflects the selected conversation only.
+- Sending in a second conversation while the first is streaming is allowed.
+- Stop affects only the active conversation.
+- Completion/cancel/error persist independently, including background conversations.
+- Sidebar timestamp updates without replacing the selected `Conversation` instance.
+- Extract `IChatClient` so streams can be faked in tests.
 
-**Creative dressing:** acrylic/Mica backdrop via `DwmSetWindowAttribute` (Win11, per-theme, fallback), gradient user bubbles, accent-tinted glow, 12–14px rounded corners, micro-animations (slide + fade + scale, hover lift, streaming caret shimmer, pulsing send button), custom thin scrollbars, pill-shaped selected conversation, Segoe Fluent Icons. **Accent override:** 8-swatch accent picker re-tints accents/gradients/glow; "match Windows dark/light" auto option. Theme picker with live swatch cards. Code font selector. Theme infrastructure is step ② so all UI is theme-aware from day one.
+### 2. Edit as new + attachments policy
 
-## Code Blocks (syntax highlighting + line numbers)
+- Right-click / hover action on user bubbles: **Edit as new**.
+- Refills the composer with text, attachments (when enabled), and the original model.
+- If the edited message is the last message in the conversation and the setting is on, it is deleted when the new message is sent; otherwise the original is kept.
+- Setting: **Replace the last message when using Edit as new** (default on).
+- Setting: **Send attachments to the model** (default off). When off, attachments are shown but excluded from outgoing history; the attach button is disabled.
+- New **Chat** settings tab also exposes **Enter sends**.
 
-```
-┌──────────────────────────────────────┐
-│ csharp                          ⧉    │  ← header: language label + copy button
-├──┬───────────────────────────────────┤
-│ 1│ using Markdig;                    │  ← gutter (dim, right-aligned, 1px divider)
-│ 2│ var doc = Markdown.Parse(md);     │     identical fixed line heights on both sides
-│ 3│ Render(doc);                      │
-└──┴───────────────────────────────────┘
-```
+### 3. Live streaming render
 
-Rounded card on code-surface; monospace `Cascadia Code → Consolas → Courier New`; horizontal scroll for long lines keeps gutter aligned; language from fenced info string; copy button copies raw code; **"Show line numbers" setting**; highlighting follows active theme. Syntax line numbers also apply to inline streaming-safe re-render (plain text while streaming, Markdown on completion).
+- Every assistant reply enters streaming mode immediately.
+- Every received delta updates `RawMarkdown`.
+- Markdown is re-rendered on a coalesced ~60 ms dispatcher timer while streaming, so formatted content (including multiple code blocks) appears as soon as possible.
+- Final render occurs the moment streaming ends.
+- Non-streaming provider responses are rendered in one pass — no artificial chunking.
 
-## Persistence (SQLite → `%APPDATA%\AIConsole\aiconsole.db`)
+### 4. Multiple Markdown/code blocks per bubble
+
+- Renderer already walks all top-level blocks.
+- Add regression coverage for two or more fenced code blocks plus surrounding Markdown.
+- Live re-render must replace the whole tree, not only the first block.
+
+### 5. Context usage + context end
+
+- Header pill to the right of the model picker:
+  - character count plus estimated tokens (`~chars / 4`)
+  - counts context messages + draft + pending text attachments + in-flight assistant text.
+- Right-click bubble:
+  - **End context here** — selected message becomes the last included in outgoing requests.
+  - **Use full context** — clears the cursor.
+- Excluded messages stay visible but are dimmed and labeled “Out of context”.
+- `Conversation.ContextEndMessageId` and `ContextResumeMessageId` persist in SQLite
+  (`conversations.context_end_id`, `conversations.context_resume_id`).
+- The first exchange after a cutoff starts a new included suffix: the old prefix plus everything
+  from that user message onward stays in context, while the skipped tail stays dimmed and excluded.
+  Later turns join the suffix automatically.
+- Context changes are blocked while that conversation streams.
+
+### 6. Model picker with search + provider tabs
+
+- Replace the model `ComboBox` with a `ModelPicker` control:
+  - button shows model ID + endpoint name
+  - popup with search box
+  - tabs: **All** + one per provider endpoint
+  - case-insensitive search over model and endpoint
+  - keyboard navigation (Up/Down/Enter/Esc)
+  - empty-state message and scrolling
+- Picker listens to the models collection so periodic refresh updates tabs/results.
+
+### 7. Responsive settings layout
+
+- `ResponsiveColumnsPanel`: two columns when wide, stacked when narrow, based on actual width.
+- Used by **Window & Hotkey** and **Appearance**; the new **Chat** tab is single-column.
+- Settings `ScrollViewer` stretches content horizontally.
+
+### 8. Slide-out X/Y offsets
+
+- `PanelOffsetX` / `PanelOffsetY` settings under Layout.
+- Left/right edges anchor at the work area top; `0,0` is the anchor corner, `+X` right, `+Y` down.
+- Top edge anchors left (or centered for a custom width).
+- Offsets apply live and are clamped so the panel stays reachable.
+- Placement math lives in a pure `WindowPlacement` helper for tests.
+
+### 9. Multiple endpoint API keys
+
+- Replace the broken `PasswordBox` attached binding with `BoundPasswordBox`.
+- Root cause: the attached-property callback only subscribed to `PasswordChanged` when the bound value changed from its default, so newly added endpoints with an empty initial key never propagated typing.
+- Regression tests cover two endpoints with distinct keys through save/reload.
+
+## Persistence
 
 | Table | Purpose |
 |---|---|
-| `settings` | key/value (JSON) — hotkey, slide edge, refresh interval, start-with-Windows, theme, accent, last model, UI state |
+| `settings` | JSON values: hotkey, slide edge, offsets, opacity, theme, chat options |
 | `endpoints` | id, name, base_url, api_key_enc (DPAPI) |
-| `models` | endpoint_id, model_id, enabled, last_seen — composite key; picker uses `endpointId::modelId` to avoid name collisions |
-| `conversations` | id, title, model, timestamps |
+| `models` | endpoint_id, model_id, enabled, last_seen |
+| `conversations` | id, title, model, context_end_id, context_resume_id, timestamps |
 | `messages` | id, conversation_id, role, model_id, content, created_at |
+| `message_attachments` | message_id, name, media_type, data |
 
-## Key Behaviors
+## Verification
 
-- **Popup:** borderless transparent window, top-center of active monitor; `TranslateTransform` + easing ~160ms in / ~120ms out; **Top (default) / Left / Right** slide edge setting; hide on `Esc`, hotkey re-press, or focus loss; tray left-click toggles; thin drag handle; model picker; settings gear.
-- **Hotkey:** Win32 `RegisterHotKey`, captured in Settings, persisted; conflict → notify, keep previous.
-- **Chat:** Enter sends, Shift+Enter newline; model dropdown grouped by endpoint; collapsible conversation sidebar (rename/delete/search); streaming renders plain per token then re-renders Markdown; Stop button; inline error banners; conversation auto-titles.
-- **Bubbles:** user right / assistant left; **name (model or "You") + timestamp under bubble**; hover **Copy** + **Remove-from-history** icons; identical commands in right-click **context menu**.
-- **Markdown:** Markdig advanced extensions (tables, lists, code, links-open-externally).
-- **Settings → Endpoints:** add name + Base URL + optional API key → on save auto-fetch `GET {base}/v1/models`; per-model checkboxes + tri-state **Select All**; per-endpoint **"Always show all models"** toggle; background `PeriodicTimer` refresh (default 6h, configurable) keeps picker current; manual model add.
-- **Import configurations from other installations:** `ConfigImporter` scans known locations and parses **OpenCode** (`opencode.json/.jsonc`, incl. `{env:VAR}` keys + `auth.json`, `@ai-sdk/openai-compatible` providers), **Continue** (`~/.continue/config.json`), **Zed** (`language_models.openai_compatible`), a **manual JSON/JSONC file pick**, a generic `{baseUrl,apiKey,models}` shape, and **local-server auto-detection** (Ollama `:11434`, LM Studio `:1234`, `:8080/:5000/:8000`); imports land as OpenAI-compatible endpoints.
-- **Extras:** start-with-Windows; single instance; API keys DPAPI-encrypted; self-contained single-file publish profile.
-
-## Implementation Order
-
-1. Scaffold solution + DB schema + repositories
-2. **Theme engine** (tokens, ThemeManager, starter palettes)
-3. Tray icon + hotkey + slide shell (acrylic)
-4. Chat UI: sidebar, bubbles, input, **streaming** OpenAI client
-5. Markdown + **CodeBlock**: syntax highlighting + line numbers + copy
-6. Settings UI: endpoints, auto-fetch, model checkboxes/select-all, **auto-refresh**, **appearance**
-7. Remaining palettes, **polish, start-with-Windows, single-instance, publish**, end-to-end test
+- Unit tests: concurrent streams, edit-as-new replacement, context filtering/advancement, model filtering, placement math, multi-endpoint keys, multi-code-block rendering.
+- WPF UI harness: per-conversation send/stop state, live Markdown updates, context pill, model search/tabs, responsive settings, context cutoff dimming, slide offsets.
+- `dotnet test AIConsole.slnx`; build through `compile.py` menu option 1.
 
 ## Git
 
-Periodic commits at each milestone on `main`.
+Commit at each milestone on `main`; release through `compile.py` and tagged GitHub Actions.

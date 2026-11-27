@@ -14,15 +14,10 @@ public partial class CodeBlock : UserControl
     private string _code = "";
     private string? _language;
 
-    private readonly Action<string> _onThemeChanged;
-
     public CodeBlock()
     {
         InitializeComponent();
         CopyButton.Click += (_, _) => Copy();
-        _onThemeChanged = _ => Rebuild();
-        ThemeManager.ThemeChanged += _onThemeChanged;
-        Unloaded += (_, _) => ThemeManager.ThemeChanged -= _onThemeChanged;
     }
 
     public string Code { get => _code; set { _code = value; Rebuild(); } }
@@ -35,7 +30,8 @@ public partial class CodeBlock : UserControl
 
     private void Rebuild()
     {
-        var fontFamily = (FontFamily)Application.Current.FindResource("FontMono");
+        var fontFamily = Application.Current?.TryFindResource("FontMono") as FontFamily
+                         ?? new FontFamily("Cascadia Code, Consolas, Courier New");
 
         LanguageLabel.Text = string.IsNullOrWhiteSpace(_language) ? "code" : _language;
         CodeLines.Children.Clear();

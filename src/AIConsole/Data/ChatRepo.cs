@@ -15,6 +15,8 @@ public sealed class ChatRepo
         CreatedAt = DateTimeOffset.Parse(r.GetString(3)),
         UpdatedAt = DateTimeOffset.Parse(r.GetString(4)),
         LastMessageAt = r.IsDBNull(5) ? null : DateTimeOffset.Parse(r.GetString(5)),
+        ContextEndMessageId = r.IsDBNull(6) ? null : r.GetInt64(6),
+        ContextResumeMessageId = r.IsDBNull(7) ? null : r.GetInt64(7),
     };
 
     private static ChatMessage MapMsg(Microsoft.Data.Sqlite.SqliteDataReader r) => new()
@@ -31,7 +33,9 @@ public sealed class ChatRepo
     public List<Conversation> Conversations() =>
         _db.Query("""
             SELECT c.id,c.title,c.model,c.created_at,c.updated_at,
-                   (SELECT m.created_at FROM messages m WHERE m.conversation_id=c.id ORDER BY m.id DESC LIMIT 1)
+                   (SELECT m.created_at FROM messages m WHERE m.conversation_id=c.id ORDER BY m.id DESC LIMIT 1),
+                   c.context_end_id,
+                   c.context_resume_id
             FROM conversations c
             ORDER BY c.updated_at DESC
             """, MapConv);
@@ -51,6 +55,12 @@ public sealed class ChatRepo
 
     public void SetModel(string id, string? model) =>
         _db.Run("UPDATE conversations SET model=@m WHERE id=@id", ("@id", id), ("@m", model));
+
+    public void SetContext(string id, long? endMessageId, long? resumeMessageId) =>
+        _db.Run("UPDATE conversations SET context_end_id=@end, context_resume_id=@resume WHERE id=@id",
+            ("@id", id), ("@end", endMessageId), ("@resume", resumeMessageId));
+
+    public void SetContextEnd(string id, long? messageId) => SetContext(id, messageId, null);
 
     public void Touch(string id) =>
         _db.Run("UPDATE conversations SET updated_at=@u WHERE id=@id", ("@id", id), ("@u", DateTimeOffset.Now.ToString("o")));

@@ -47,6 +47,7 @@ public partial class ChatBubble : UserControl
         if (Bubble.ContextMenu is not null) Bubble.ContextMenu.DataContext = vm;
 
         UpdateStreaming(vm.IsStreaming, vm.RawMarkdown);
+        UpdateContextStyle(vm);
         if (_hooked is not null) _hooked.PropertyChanged -= OnVmPropertyChanged;
         _hooked = vm;
         vm.PropertyChanged += OnVmPropertyChanged;
@@ -58,14 +59,21 @@ public partial class ChatBubble : UserControl
     {
         if (sender is not MessageViewModel vm) return;
         if (e.PropertyName is nameof(MessageViewModel.IsStreaming)) UpdateStreaming(vm.IsStreaming, vm.RawMarkdown);
-        else if (e.PropertyName is nameof(MessageViewModel.RawMarkdown)) StreamingText.Text = vm.RawMarkdown;
+        else if (e.PropertyName is nameof(MessageViewModel.IsOutOfContext)) UpdateContextStyle(vm);
     }
 
     private void UpdateStreaming(bool streaming, string text)
     {
-        StreamingText.Text = text;
-        StreamingText.Visibility = streaming ? Visibility.Visible : Visibility.Collapsed;
-        MarkdownHost.Visibility = streaming ? Visibility.Collapsed : Visibility.Visible;
+        // The view model re-renders Markdown while text arrives, so the bubble is
+        // always the live view. The plain text block remains only as a fallback.
+        StreamingText.Visibility = Visibility.Collapsed;
+        MarkdownHost.Visibility = Visibility.Visible;
+    }
+
+    private void UpdateContextStyle(MessageViewModel vm)
+    {
+        RootGrid.Opacity = vm.IsOutOfContext ? 0.45 : 1;
+        RootGrid.ToolTip = vm.IsOutOfContext ? "This message is outside the outgoing context." : null;
     }
 
     private void Fade(UIElement el, double to)

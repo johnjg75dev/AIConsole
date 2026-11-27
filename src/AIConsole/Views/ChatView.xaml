@@ -71,9 +71,17 @@
                 </Grid.ColumnDefinitions>
                 <Button Grid.Column="0" Style="{DynamicResource IconButton}" Content="&#x2630;" FontSize="15"
                         ToolTip="Toggle conversations" Command="{Binding ToggleSidebarCommand}" Margin="0,0,6,0"/>
-                <ComboBox Grid.Column="1" ItemsSource="{Binding Models}" SelectedItem="{Binding SelectedModel}"
-                          DisplayMemberPath="Display" MinWidth="220" MaxWidth="420" HorizontalAlignment="Left"
-                          ToolTip="Choose model" FontSize="12.5"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Left">
+                    <controls:ModelPicker x:Name="ModelPicker" ItemsSource="{Binding Models}" SelectedItem="{Binding SelectedModel}"
+                                          MinWidth="240" MaxWidth="420" ToolTip="Search and choose a model"/>
+                    <Border Background="{DynamicResource SurfaceAltBrush}" BorderBrush="{DynamicResource BorderBrush}"
+                            BorderThickness="1" CornerRadius="9" Padding="9,5" Margin="8,0,0,0" VerticalAlignment="Center"
+                            ToolTip="{Binding ContextUsageDetails}">
+                        <TextBlock Text="{Binding ContextUsageText}" FontSize="10.5"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   TextTrimming="CharacterEllipsis" MaxWidth="210"/>
+                    </Border>
+                </StackPanel>
                 <StackPanel Grid.Column="2" Orientation="Horizontal">
                     <Button Content="Decision" ToolTip="Evaluate a task with a System One decision model" Click="Decision_Click" Margin="0,0,6,0"/>
                     <Button Style="{DynamicResource IconButton}" Content="&#x21BB;" FontSize="15" ToolTip="Refresh models" Command="{Binding RebuildModelsCommand}"/>
@@ -126,7 +134,9 @@
                         CornerRadius="14" Padding="4">
                     <Grid>
                         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                        <Button Grid.Column="0" Content="📎" ToolTip="Attach text or image files" Style="{DynamicResource IconButton}" Click="Attach_Click" VerticalAlignment="Bottom" Margin="3,4"/>
+                        <Button Grid.Column="0" Content="📎" Style="{DynamicResource IconButton}" Click="Attach_Click"
+                                VerticalAlignment="Bottom" Margin="3,4" IsEnabled="{Binding CanAttach}"
+                                ToolTip="Attach text or image files (disabled in Settings → Chat)"/>
                         <TextBlock Grid.Column="1" Text="Message your model…" Margin="12,8,0,0" FontSize="13.5"
                                    Foreground="{DynamicResource TextDisabledBrush}" IsHitTestVisible="False" Panel.ZIndex="1">
                             <TextBlock.Style>
@@ -140,7 +150,7 @@
                                  Text="{Binding InputText, UpdateSourceTrigger=PropertyChanged}"
                                  TextWrapping="Wrap" AcceptsReturn="True" MinHeight="38" MaxHeight="140"
                                  VerticalScrollBarVisibility="Auto" Padding="8,8"
-                                 ToolTip="Enter to send · Shift+Enter for newline" PreviewKeyDown="InputBox_PreviewKeyDown"/>
+                                 ToolTip="{Binding ComposerHint}" PreviewKeyDown="InputBox_PreviewKeyDown"/>
                         <Button Grid.Column="2" x:Name="SendButton" Width="40" Height="40" Margin="4" VerticalAlignment="Bottom"
                                 ToolTip="Send" FontFamily="{DynamicResource FontGlyph}" FontSize="15"
                                 Click="Send_Click">

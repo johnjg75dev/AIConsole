@@ -71,7 +71,12 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty] private double _panelWidth;
     [ObservableProperty] private double _panelHeight = 600;
     [ObservableProperty] private double _panelOpacity = 1.0;
+    [ObservableProperty] private double _panelOffsetX;
+    [ObservableProperty] private double _panelOffsetY;
     [ObservableProperty] private bool _notifyOnCompletion = true;
+    [ObservableProperty] private bool _sendAttachments;
+    [ObservableProperty] private bool _replaceLastMessageOnEditAsNew = true;
+    [ObservableProperty] private bool _enterToSend = true;
     public ObservableCollection<string> SlideEdges { get; } = new() { "Top", "Left", "Right" };
 
     public event Action<string>? Status;
@@ -95,6 +100,10 @@ public partial class SettingsViewModel : ObservableObject
         _startWithWindows = _app.StartWithWindows; _hideOnFocusLoss = _app.HideOnFocusLoss;
         _alwaysOnTop = _app.AlwaysOnTop; _panelWidth = _app.PanelWidth; _panelHeight = _app.PanelHeight; _notifyOnCompletion = _app.NotifyOnCompletion;
         _panelOpacity = Math.Clamp(_app.PanelOpacity, 0.3, 1.0);
+        _panelOffsetX = _app.PanelOffsetX; _panelOffsetY = _app.PanelOffsetY;
+        _sendAttachments = _app.SendAttachments;
+        _replaceLastMessageOnEditAsNew = _app.ReplaceLastMessageOnEditAsNew;
+        _enterToSend = _app.EnterToSend;
         _slideEdge = _app.SlideEdge.ToString(); _hotkeyText = _app.Hotkey; _refreshMinutes = _app.RefreshMinutes;
 
         Reload();
@@ -224,6 +233,19 @@ public partial class SettingsViewModel : ObservableObject
     partial void OnPanelWidthChanged(double value) { _app.PanelWidth = Math.Max(0, value); }
     partial void OnPanelHeightChanged(double value) { _app.PanelHeight = value <= 0 ? 600 : value; }
     partial void OnPanelOpacityChanged(double value) { _app.PanelOpacity = Math.Clamp(value, 0.3, 1.0); }
+    partial void OnPanelOffsetXChanged(double value) { _app.PanelOffsetX = value; }
+    partial void OnPanelOffsetYChanged(double value) { _app.PanelOffsetY = value; }
+    partial void OnSendAttachmentsChanged(bool value)
+    {
+        _app.SendAttachments = value;
+        _chat.ReloadSettings(_app);
+    }
+    partial void OnReplaceLastMessageOnEditAsNewChanged(bool value) { _app.ReplaceLastMessageOnEditAsNew = value; }
+    partial void OnEnterToSendChanged(bool value)
+    {
+        _app.EnterToSend = value;
+        _chat.ReloadSettings(_app);
+    }
     partial void OnNotifyOnCompletionChanged(bool value) { _app.NotifyOnCompletion = value; }
 
     partial void OnStartWithWindowsChanged(bool value)
@@ -308,6 +330,7 @@ public partial class SettingsViewModel : ObservableObject
     public void Apply()
     {
         Save();
+        _chat.ReloadSettings(_app);
         Services.StartupService.SetEnabled(_app.StartWithWindows);
         if (!string.IsNullOrWhiteSpace(_app.Hotkey)) _hotkey.Register(Hotkey.Parse(_app.Hotkey));
         Emit("Settings applied.");
@@ -323,6 +346,7 @@ public partial class SettingsViewModel : ObservableObject
         Services.StartupService.SetEnabled(_app.StartWithWindows);
         _hotkey.Register(Hotkey.Parse(_app.Hotkey));
         RestoreFromApp();
+        _chat.ReloadSettings(_app);
         RequestClose?.Invoke();
     }
 
@@ -334,6 +358,10 @@ public partial class SettingsViewModel : ObservableObject
         HotkeyText = _app.Hotkey; RefreshMinutes = _app.RefreshMinutes; AlwaysOnTop = _app.AlwaysOnTop;
         PanelWidth = _app.PanelWidth; PanelHeight = _app.PanelHeight; NotifyOnCompletion = _app.NotifyOnCompletion;
         PanelOpacity = Math.Clamp(_app.PanelOpacity, 0.3, 1.0);
+        PanelOffsetX = _app.PanelOffsetX; PanelOffsetY = _app.PanelOffsetY;
+        SendAttachments = _app.SendAttachments;
+        ReplaceLastMessageOnEditAsNew = _app.ReplaceLastMessageOnEditAsNew;
+        EnterToSend = _app.EnterToSend;
         Markdown.MarkdownRenderer.ShowLineNumbers = _app.ShowLineNumbers;
         _chat.RerenderMarkdown();
     }

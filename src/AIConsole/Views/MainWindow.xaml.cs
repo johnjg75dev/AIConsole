@@ -27,6 +27,8 @@ public partial class MainWindow : Window
     private bool _alwaysOnTop = true;
     private bool _acrylic = true;
     private double _panelOpacity = 1.0;
+    private double _offsetX;
+    private double _offsetY;
     private bool _visible;
     private HwndSource? _source;
 
@@ -54,12 +56,23 @@ public partial class MainWindow : Window
         SettingsHost.Children.Add(settings);
     }
 
-    public void SetSlideEdge(SlideEdge edge) => _edge = edge;
+    public void SetSlideEdge(SlideEdge edge)
+    {
+        _edge = edge;
+        if (_visible) PositionWindow();
+    }
+
     public void SetAcrylic(bool on) { _acrylic = on; ApplyBackdrop(); }
     public void SetAlwaysOnTop(bool on) { _alwaysOnTop = on; Topmost = on; }
     public void SetPanelSize(double width, double height)
     {
         _customWidth = width; _panelHeight = height <= 0 ? 600 : height; ApplySize();
+    }
+
+    public void SetPanelOffset(double x, double y)
+    {
+        _offsetX = x; _offsetY = y;
+        if (_visible) PositionWindow();
     }
 
     /// <summary>
@@ -198,22 +211,10 @@ public partial class MainWindow : Window
     private void PositionWindow()
     {
         ApplySize();
-        var work = SystemParameters.WorkArea;
-        switch (_edge)
-        {
-            case SlideEdge.Top:
-                Left = _customWidth > 0 ? work.Left + (work.Width - Width) / 2 : work.Left;
-                Top = work.Top;
-                break;
-            case SlideEdge.Left:
-                Left = work.Left;
-                Top = work.Top + (work.Height - Height) / 2;
-                break;
-            case SlideEdge.Right:
-                Left = work.Right - Width;
-                Top = work.Top + (work.Height - Height) / 2;
-                break;
-        }
+        var (left, top) = WindowPlacement.Compute(
+            _edge, SystemParameters.WorkArea, Width, Height, _customWidth, _offsetX, _offsetY);
+        Left = left;
+        Top = top;
     }
 
     private void OnDeactivated(object? sender, EventArgs e)

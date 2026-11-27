@@ -11,6 +11,10 @@ public sealed class Conversation
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.Now;
     /// <summary>Creation time of the newest message, or null for an empty conversation.</summary>
     public DateTimeOffset? LastMessageAt { get; set; }
+    /// <summary>Last message of the retained context prefix; null = no cutoff.</summary>
+    public long? ContextEndMessageId { get; set; }
+    /// <summary>First message of the new suffix included after a cutoff; null = no suffix.</summary>
+    public long? ContextResumeMessageId { get; set; }
 }
 
 public sealed record ChatAttachment(string Name, string MediaType, byte[] Data)
@@ -70,6 +74,8 @@ public sealed class AppSettings
     public double PanelWidth { get; set; }             // 0 = auto; Top slide defaults to full screen width
     public double PanelHeight { get; set; } = 600;     // panel height (px)
     public double PanelOpacity { get; set; } = 1.0;    // 0.3 - 1.0
+    public double PanelOffsetX { get; set; }           // px from the edge anchor
+    public double PanelOffsetY { get; set; }
     public bool NotifyOnCompletion { get; set; } = true; // Windows notification when a reply finishes
 
     // Model refresh
@@ -78,6 +84,8 @@ public sealed class AppSettings
     // Chat
     public string? LastModelKey { get; set; }
     public bool EnterToSend { get; set; } = true;
+    public bool SendAttachments { get; set; } = false;
+    public bool ReplaceLastMessageOnEditAsNew { get; set; } = true;
 
     // Appearance
     public string Theme { get; set; } = "Midnight Neon";

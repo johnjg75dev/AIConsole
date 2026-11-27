@@ -23,6 +23,7 @@ public partial class ChatView : UserControl
     }
 
     private ChatViewModel? _hookedVm;
+    private System.Collections.ObjectModel.ObservableCollection<MessageViewModel>? _observedMessages;
 
     private void HookVm()
     {
@@ -32,7 +33,9 @@ public partial class ChatView : UserControl
         if (_hookedVm is null) return;
         _hookedVm.MessageAdded += ScrollToBottom;
         _hookedVm.MessagesChanged += ScrollToBottom;
-        _hookedVm.Messages.CollectionChanged += OnMessagesChanged;
+        _hookedVm.ComposerFocusRequested += FocusInput;
+        _hookedVm.PropertyChanged += OnVmPropertyChanged;
+        ObserveMessages(_hookedVm.Messages);
     }
 
     private void Unhook()
@@ -40,8 +43,28 @@ public partial class ChatView : UserControl
         if (_hookedVm is null) return;
         _hookedVm.MessageAdded -= ScrollToBottom;
         _hookedVm.MessagesChanged -= ScrollToBottom;
-        _hookedVm.Messages.CollectionChanged -= OnMessagesChanged;
+        _hookedVm.ComposerFocusRequested -= FocusInput;
+        _hookedVm.PropertyChanged -= OnVmPropertyChanged;
+        ObserveMessages(null);
         _hookedVm = null;
+    }
+
+    private void OnVmPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ChatViewModel.Messages) && _hookedVm is not null)
+        {
+            ObserveMessages(_hookedVm.Messages);
+            ScrollToBottom();
+        }
+    }
+
+    private void ObserveMessages(System.Collections.ObjectModel.ObservableCollection<MessageViewModel>? collection)
+    {
+        if (_observedMessages is not null)
+            _observedMessages.CollectionChanged -= OnMessagesChanged;
+        _observedMessages = collection;
+        if (_observedMessages is not null)
+            _observedMessages.CollectionChanged += OnMessagesChanged;
     }
 
     private void OnMessagesChanged(object? sender, NotifyCollectionChangedEventArgs e) => ScrollToBottom();

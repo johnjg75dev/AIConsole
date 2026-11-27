@@ -100,6 +100,7 @@ public partial class App : Application
         // sizing + always-on-top
         _window.SetAlwaysOnTop(_appSettings.AlwaysOnTop);
         _window.SetPanelSize(_appSettings.PanelWidth, _appSettings.PanelHeight);
+        _window.SetPanelOffset(_appSettings.PanelOffsetX, _appSettings.PanelOffsetY);
 
         // react to appearance changes
         ThemeManager.ThemeChanged += _ => { };
@@ -123,6 +124,9 @@ public partial class App : Application
                     _window.SetPanelSize(_appSettings.PanelWidth, _appSettings.PanelHeight); break;
                 case nameof(SettingsViewModel.PanelOpacity):
                     _window.SetPanelOpacity(_appSettings.PanelOpacity); break;
+                case nameof(SettingsViewModel.PanelOffsetX):
+                case nameof(SettingsViewModel.PanelOffsetY):
+                    _window.SetPanelOffset(_appSettings.PanelOffsetX, _appSettings.PanelOffsetY); break;
             }
         };
 

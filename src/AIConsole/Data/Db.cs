@@ -92,6 +92,16 @@ public sealed class Db : IDisposable
             CREATE INDEX IF NOT EXISTS idx_attachments_message ON message_attachments(message_id);
             CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages(conversation_id);
             """);
+
+        EnsureColumn("conversations", "context_end_id", "INTEGER");
+        EnsureColumn("conversations", "context_resume_id", "INTEGER");
+    }
+
+    private void EnsureColumn(string table, string column, string type)
+    {
+        var exists = Query($"PRAGMA table_info({table})", r => r.GetString(1))
+            .Any(name => string.Equals(name, column, StringComparison.OrdinalIgnoreCase));
+        if (!exists) Exec($"ALTER TABLE {table} ADD COLUMN {column} {type}");
     }
 
     public void Exec(string sql)

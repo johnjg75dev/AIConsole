@@ -140,6 +140,26 @@ public sealed class ChatRepoTests : IDisposable
         Assert.Null(_repo.LastMessageAt(conversation.Id));
     }
 
+    [Fact]
+    public void SetContext_RoundTripsPrefixAndSuffixThroughConversations()
+    {
+        var conversation = NewConversation();
+        var cut = _repo.Add(NewMessage(conversation, "cut here"));
+        var resume = _repo.Add(NewMessage(conversation, "new suffix"));
+
+        _repo.SetContext(conversation.Id, cut.Id, resume.Id);
+
+        var loaded = Assert.Single(_repo.Conversations());
+        Assert.Equal(cut.Id, loaded.ContextEndMessageId);
+        Assert.Equal(resume.Id, loaded.ContextResumeMessageId);
+
+        _repo.SetContextEnd(conversation.Id, null);
+
+        loaded = Assert.Single(_repo.Conversations());
+        Assert.Null(loaded.ContextEndMessageId);
+        Assert.Null(loaded.ContextResumeMessageId);
+    }
+
     private Conversation NewConversation(DateTimeOffset? updatedAt = null) =>
         _repo.Create(new Conversation
         {

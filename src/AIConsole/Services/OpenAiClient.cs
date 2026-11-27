@@ -13,7 +13,7 @@ public sealed record ChatMessageDto(
     [property: JsonPropertyName("content")] object Content);
 
 /// <summary>Minimal client for any OpenAI-compatible server (/models + /chat/completions, SSE streaming).</summary>
-public sealed class OpenAiClient : IDisposable
+public sealed class OpenAiClient : IChatClient, IDisposable
 {
     private readonly HttpClient _http = new() { Timeout = Timeout.InfiniteTimeSpan };
 

@@ -58,8 +58,13 @@
             <Border.ContextMenu>
                 <ContextMenu>
                     <MenuItem Header="Edit message" Command="{Binding EditCommand}"/>
+                    <MenuItem Header="Edit as new" Command="{Binding EditAsNewCommand}"
+                              Visibility="{Binding IsUser, Converter={x:Static converters:BoolToVisibilityConverter.Instance}}"/>
                     <MenuItem Header="Copy" Command="{Binding CopyCommand}" Icon="&#x29C9;"/>
                     <MenuItem Header="Remove from history" Command="{Binding RemoveCommand}" Icon="&#x2715;"/>
+                    <Separator/>
+                    <MenuItem Header="End context here" Command="{Binding EndContextCommand}"/>
+                    <MenuItem Header="Use full context" Command="{Binding FullContextCommand}"/>
                 </ContextMenu>
             </Border.ContextMenu>
         </Border>
@@ -71,12 +76,18 @@
                 <TextBlock Text=" · " FontSize="10.5" Foreground="{DynamicResource TextDisabledBrush}" VerticalAlignment="Center"/>
                 <TextBlock Text="{Binding TimestampText}" FontSize="10.5" Foreground="{DynamicResource TextDisabledBrush}"
                            VerticalAlignment="Center"/>
+                <TextBlock Text="out of context" FontSize="9.5" Margin="7,0,0,0" VerticalAlignment="Center"
+                           Foreground="{DynamicResource WarningBrush}"
+                           Visibility="{Binding IsOutOfContext, Converter={x:Static converters:BoolToVisibilityConverter.Instance}}"/>
             </StackPanel>
 
             <StackPanel x:Name="Actions" Orientation="Horizontal" VerticalAlignment="Center"
                         Opacity="0" Visibility="Collapsed">
                 <Button Style="{DynamicResource IconButton}" Content="✎" FontSize="12" Padding="5"
                         Command="{Binding EditCommand}" ToolTip="Edit message"/>
+                <Button Style="{DynamicResource IconButton}" Content="&#x21AA;" FontSize="12" Padding="5"
+                        Command="{Binding EditAsNewCommand}" ToolTip="Edit as new message"
+                        Visibility="{Binding IsUser, Converter={x:Static converters:BoolToVisibilityConverter.Instance}}"/>
                 <Button Style="{DynamicResource IconButton}" Content="&#x29C9;" FontSize="12" Padding="5"
                         Command="{Binding CopyCommand}" ToolTip="Copy"/>
                 <Button Style="{DynamicResource IconButton}" Content="&#x2715;" FontSize="12" Padding="5"
