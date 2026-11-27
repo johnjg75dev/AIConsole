@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Windows;
 using AIConsole.Models;
 using AIConsole.Services;
@@ -22,6 +23,9 @@ public partial class MessageViewModel : ObservableObject
     [ObservableProperty] private bool _isEditing;
     [ObservableProperty] private string _editText = "";
     [ObservableProperty] private string _attachmentsLabel = "";
+
+    public ObservableCollection<AttachmentViewModel> Attachments { get; } = new();
+    public bool HasAttachments => Attachments.Count > 0;
 
     public MessageViewModel(ChatMessage message)
     {
@@ -51,6 +55,14 @@ public partial class MessageViewModel : ObservableObject
 
     /// <summary>Raw markdown source for copy.</summary>
     public string SourceText => RawMarkdown;
+
+    public void SetAttachments(IReadOnlyList<ChatAttachment> attachments)
+    {
+        Attachments.Clear();
+        foreach (var attachment in attachments) Attachments.Add(new AttachmentViewModel(attachment));
+        AttachmentsLabel = string.Join("  ·  ", attachments.Select(a => "📎 " + a.Name));
+        OnPropertyChanged(nameof(HasAttachments));
+    }
 
     [RelayCommand]
     private void Copy() { try { Clipboard.SetText(RawMarkdown); } catch { } }

@@ -74,7 +74,7 @@ public partial class ChatViewModel : ObservableObject
             foreach (var m in msgs)
             {
                 var vm = new MessageViewModel(m);
-                vm.AttachmentsLabel = AttachmentLabel(attMap.TryGetValue(m.Id, out var list) ? list : EmptyAttachments);
+                vm.SetAttachments(attMap.TryGetValue(m.Id, out var list) ? list : EmptyAttachments);
                 Hook(vm);
                 Messages.Add(vm);
             }
@@ -111,7 +111,12 @@ public partial class ChatViewModel : ObservableObject
         if (string.IsNullOrWhiteSpace(title)) return;
         _chat.Rename(c.Id, title.Trim());
         c.Title = title.Trim();
-        // nudge UI
+        c.UpdatedAt = DateTimeOffset.Now;
+        RefreshConversationRow(c);
+    }
+
+    private void RefreshConversationRow(Conversation c)
+    {
         var idx = Conversations.IndexOf(c);
         if (idx >= 0) { Conversations.RemoveAt(idx); Conversations.Insert(idx, c); }
     }
@@ -192,10 +197,19 @@ public partial class ChatViewModel : ObservableObject
                 Participant = "You", ModelId = model.Key,
             }, attachmentsToSend);
             userVm.Id = userMsg.Id;
-            userVm.AttachmentsLabel = AttachmentLabel(attachmentsToSend);
+            userVm.SetAttachments(attachmentsToSend);
             PendingAttachments.Clear();
             Hook(userVm);
             Messages.Add(userVm);
+            if (SelectedConversation is { } active)
+            {
+                var row = Conversations.FirstOrDefault(c => c.Id == active.Id);
+                if (row is not null)
+                {
+                    row.LastMessageAt = userMsg.Timestamp;
+                    RefreshConversationRow(row);
+                }
+            }
             MessageAdded?.Invoke();
 
             // assistant placeholder
@@ -281,9 +295,6 @@ public partial class ChatViewModel : ObservableObject
 
     // ── message removal ──
 
-    private static string AttachmentLabel(IEnumerable<ChatAttachment> attachments) =>
-        string.Join("  ·  ", attachments.Select(a => "📎 " + a.Name));
-
     private static readonly IReadOnlyList<ChatAttachment> EmptyAttachments = new List<ChatAttachment>();
 
     /// <summary>Build the OpenAI message `content` (string, or multimodal parts when attachments exist).</summary>
@@ -336,6 +347,15 @@ public partial class ChatViewModel : ObservableObject
         if (IsStreaming) { StatusMessage = "Stop the current response before removing messages."; return; }
         if (vm.Id != 0) _chat.DeleteMessage(vm.Id);
         RemoveVm(vm);
+        if (SelectedConversation is { } conversation)
+        {
+            var row = Conversations.FirstOrDefault(c => c.Id == conversation.Id);
+            if (row is not null)
+            {
+                row.LastMessageAt = _chat.LastMessageAt(row.Id);
+                RefreshConversationRow(row);
+            }
+        }
     }
 
     private void RemoveVm(MessageViewModel vm)

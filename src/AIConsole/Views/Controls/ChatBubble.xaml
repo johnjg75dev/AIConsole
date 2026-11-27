@@ -20,11 +20,33 @@
                 <TextBlock x:Name="StreamingText" Visibility="Collapsed" TextWrapping="Wrap" FontSize="13.5"/>
                 <ContentPresenter x:Name="MarkdownHost" Content="{Binding Rendered}"/>
               </Grid>
-              <TextBlock Text="{Binding AttachmentsLabel}" TextWrapping="Wrap" FontSize="11" Margin="0,6,0,0"
-                         Foreground="{DynamicResource TextSecondaryBrush}"
-                         Visibility="{Binding AttachmentsLabel, Converter={x:Static converters:StringToVisibilityConverter.Instance}}"/>
-              <StackPanel>
-                  <StackPanel.Style><Style TargetType="StackPanel"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding IsEditing}" Value="True"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></StackPanel.Style>
+              <ItemsControl ItemsSource="{Binding Attachments}" Margin="0,7,0,0"
+                            Visibility="{Binding HasAttachments, Converter={x:Static converters:BoolToVisibilityConverter.Instance}}">
+                  <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                          <Button Click="Attachment_Click" Cursor="Hand" Padding="0" Margin="0,0,6,6"
+                                  Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Left"
+                                  ToolTip="Open attachment">
+                              <Border Background="{DynamicResource SurfaceAltBrush}" BorderBrush="{DynamicResource BorderBrush}"
+                                      BorderThickness="1" CornerRadius="8" Padding="6">
+                                  <StackPanel>
+                                      <Image Source="{Binding Preview}" MaxWidth="260" MaxHeight="150" Stretch="Uniform"
+                                             Margin="0,0,0,4"
+                                             Visibility="{Binding HasPreview, Converter={x:Static converters:BoolToVisibilityConverter.Instance}}"/>
+                                      <StackPanel Orientation="Horizontal">
+                                          <TextBlock Text="📎" FontSize="11" Margin="0,0,4,0"/>
+                                          <TextBlock Text="{Binding Name}" FontSize="11" MaxWidth="240"
+                                                     TextTrimming="CharacterEllipsis"
+                                                     Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                      </StackPanel>
+                                  </StackPanel>
+                              </Border>
+                          </Button>
+                      </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+              </ItemsControl>
+              <StackPanel DataContext="{Binding}" Visibility="{Binding IsEditing, Converter={x:Static converters:BoolToVisibilityConverter.Instance}}">
                   <TextBox Text="{Binding EditText, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" MinWidth="240" MinHeight="70" MaxHeight="200" VerticalScrollBarVisibility="Auto" Margin="0,8,0,6"/>
                   <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                       <Button Content="Cancel" Command="{Binding CancelEditCommand}" Margin="0,0,6,0"/>
@@ -59,8 +81,8 @@
                         Command="{Binding RemoveCommand}" ToolTip="Remove from history"/>
             </StackPanel>
 
-            <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center"
-                        Margin="6,0,0,0">
+            <StackPanel x:Name="MetaPanel" Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right"
+                        VerticalAlignment="Center" Margin="6,0,0,0">
                 <TextBlock Text="{Binding DisplayName}" FontSize="10.5" FontWeight="SemiBold"
                            Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
                 <TextBlock Text=" · " FontSize="10.5" Foreground="{DynamicResource TextDisabledBrush}" VerticalAlignment="Center"/>

@@ -140,7 +140,9 @@
                     <StackPanel>
                         <CheckBox Content="Match Windows dark/light mode" IsChecked="{Binding FollowWindowsTheme}" FontSize="12.5" Margin="0,0,0,10"/>
                         <TextBlock Text="Theme (applies live; reverts if you Cancel)" FontSize="12.5" Margin="0,0,0,6"/>
-                        <ComboBox ItemsSource="{Binding Themes}" SelectedItem="{Binding Theme}" Width="200" HorizontalAlignment="Left" FontSize="12.5" Margin="0,0,0,10"/>
+                        <ComboBox ItemsSource="{Binding Themes}" SelectedItem="{Binding Theme, Mode=TwoWay}" Width="200"
+                                  HorizontalAlignment="Left" FontSize="12.5" Margin="0,0,0,10"
+                                  SelectionChanged="Theme_SelectionChanged"/>
                         <TextBlock Text="Accent" FontSize="12.5" Margin="0,0,0,6"/>
                         <ItemsControl ItemsSource="{Binding AccentSwatches}" Margin="0,0,0,6">
                             <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>

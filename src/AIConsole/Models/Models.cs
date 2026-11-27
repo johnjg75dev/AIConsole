@@ -9,6 +9,8 @@ public sealed class Conversation
     public string? Model { get; set; }
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.Now;
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.Now;
+    /// <summary>Creation time of the newest message, or null for an empty conversation.</summary>
+    public DateTimeOffset? LastMessageAt { get; set; }
 }
 
 public sealed record ChatAttachment(string Name, string MediaType, byte[] Data)

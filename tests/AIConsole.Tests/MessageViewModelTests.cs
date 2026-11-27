@@ -24,4 +24,45 @@ public class MessageViewModelTests
 
         Assert.Equal("", vm.AttachmentsLabel);
     }
+
+    [Fact]
+    public void Edit_PrefillsTheEditorWithTheRawMessage()
+    {
+        var vm = Editable("Hello **world**");
+
+        vm.EditCommand.Execute(null);
+
+        Assert.True(vm.IsEditing);
+        Assert.Equal("Hello **world**", vm.EditText);
+    }
+
+    [Fact]
+    public void CancelEdit_HidesTheEditorWithoutSaving()
+    {
+        var vm = Editable("original");
+        vm.EditCommand.Execute(null);
+        vm.EditText = "changed";
+
+        vm.CancelEditCommand.Execute(null);
+
+        Assert.False(vm.IsEditing);
+        Assert.Equal("original", vm.RawMarkdown);
+    }
+
+    [Fact]
+    public void SaveEdit_RaisesEditRequested()
+    {
+        var vm = Editable("original");
+        vm.EditCommand.Execute(null);
+        vm.EditText = "changed";
+        MessageViewModel? requested = null;
+        vm.EditRequested += message => requested = message;
+
+        vm.SaveEditCommand.Execute(null);
+
+        Assert.Same(vm, requested);
+    }
+
+    private static MessageViewModel Editable(string content) =>
+        new(isUser: true, "You") { Id = 7, RawMarkdown = content };
 }

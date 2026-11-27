@@ -113,6 +113,33 @@ public sealed class ChatRepoTests : IDisposable
         Assert.Equal(0L, Convert.ToInt64(_db.Scalar("SELECT COUNT(*) FROM message_attachments")));
     }
 
+    [Fact]
+    public void Conversations_ExposeTimestampOfNewestMessage()
+    {
+        var conversation = NewConversation();
+        var older = NewMessage(conversation, "older");
+        older.Timestamp = DateTimeOffset.Now.AddHours(-3);
+        _repo.Add(older);
+        var newestTime = DateTimeOffset.Now.AddMinutes(-5);
+        var newest = NewMessage(conversation, "newest");
+        newest.Timestamp = newestTime;
+        _repo.Add(newest);
+
+        var loaded = Assert.Single(_repo.Conversations());
+
+        Assert.Equal(newestTime, loaded.LastMessageAt);
+        Assert.Equal(newestTime, _repo.LastMessageAt(conversation.Id));
+    }
+
+    [Fact]
+    public void LastMessageAt_IsNullForEmptyConversation()
+    {
+        var conversation = NewConversation();
+
+        Assert.Null(Assert.Single(_repo.Conversations()).LastMessageAt);
+        Assert.Null(_repo.LastMessageAt(conversation.Id));
+    }
+
     private Conversation NewConversation(DateTimeOffset? updatedAt = null) =>
         _repo.Create(new Conversation
         {

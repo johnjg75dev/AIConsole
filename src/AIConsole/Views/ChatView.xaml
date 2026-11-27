@@ -26,16 +26,25 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <Grid Margin="0,1">
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                     <Border x:Name="ConvBg" CornerRadius="9" Padding="10,8" Background="Transparent" Cursor="Hand"
-                                            MouseLeftButtonUp="Conversation_Click">
-                                        <TextBlock Text="{Binding Title}" FontSize="12.5" TextTrimming="CharacterEllipsis"
-                                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                            MouseLeftButtonUp="Conversation_Click"
+                                            ToolTip="Right-click to rename or remove">
+                                        <Border.ContextMenu>
+                                            <ContextMenu Opened="ConversationMenu_Opened"
+                                                         DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+                                                <MenuItem Header="Rename…" Click="RenameConversation_Click"/>
+                                                <MenuItem Header="Remove" Click="RemoveConversation_Click"/>
+                                            </ContextMenu>
+                                        </Border.ContextMenu>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="{Binding Title}" FontSize="12.5" TextTrimming="CharacterEllipsis"
+                                                       Margin="0,0,8,0" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding LastMessageAt, Converter={x:Static converters:ActivityTimeConverter.Instance}}"
+                                                       FontSize="10" VerticalAlignment="Center"
+                                                       Foreground="{DynamicResource TextDisabledBrush}"/>
+                                        </Grid>
                                     </Border>
-                                    <Button Grid.Column="1" Style="{DynamicResource IconButton}" Content="&#x2715;" FontSize="11"
-                                            Opacity="0.5" ToolTip="Delete chat"
-                                            Command="{Binding DataContext.DeleteConversationCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                            CommandParameter="{Binding}"/>
                                 </Grid>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>

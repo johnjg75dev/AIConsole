@@ -14,6 +14,7 @@ public sealed class ChatRepo
         Model = r.IsDBNull(2) ? null : r.GetString(2),
         CreatedAt = DateTimeOffset.Parse(r.GetString(3)),
         UpdatedAt = DateTimeOffset.Parse(r.GetString(4)),
+        LastMessageAt = r.IsDBNull(5) ? null : DateTimeOffset.Parse(r.GetString(5)),
     };
 
     private static ChatMessage MapMsg(Microsoft.Data.Sqlite.SqliteDataReader r) => new()
@@ -28,7 +29,12 @@ public sealed class ChatRepo
     };
 
     public List<Conversation> Conversations() =>
-        _db.Query("SELECT id,title,model,created_at,updated_at FROM conversations ORDER BY updated_at DESC", MapConv);
+        _db.Query("""
+            SELECT c.id,c.title,c.model,c.created_at,c.updated_at,
+                   (SELECT m.created_at FROM messages m WHERE m.conversation_id=c.id ORDER BY m.id DESC LIMIT 1)
+            FROM conversations c
+            ORDER BY c.updated_at DESC
+            """, MapConv);
 
     public Conversation Create(Conversation c)
     {
@@ -102,6 +108,14 @@ public sealed class ChatRepo
         foreach (var row in rows)
             if (result.TryGetValue(row.MessageId, out var list)) list.Add(row.Attachment);
         return result;
+    }
+
+    public DateTimeOffset? LastMessageAt(string conversationId)
+    {
+        var value = _db.Scalar(
+            "SELECT created_at FROM messages WHERE conversation_id=@c ORDER BY id DESC LIMIT 1",
+            ("@c", conversationId));
+        return value is string text ? DateTimeOffset.Parse(text) : null;
     }
 
     public void UpdateContent(long id, string content)

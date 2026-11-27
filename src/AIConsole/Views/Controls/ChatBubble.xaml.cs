@@ -27,6 +27,11 @@ public partial class ChatBubble : UserControl
 
         // participant-side styling
         Bubble.HorizontalAlignment = vm.IsUser ? HorizontalAlignment.Right : HorizontalAlignment.Left;
+        Grid.SetColumn(Actions, vm.IsUser ? 0 : 2);
+        Grid.SetColumn(MetaPanel, vm.IsUser ? 2 : 0);
+        Actions.HorizontalAlignment = vm.IsUser ? HorizontalAlignment.Left : HorizontalAlignment.Right;
+        MetaPanel.HorizontalAlignment = vm.IsUser ? HorizontalAlignment.Right : HorizontalAlignment.Left;
+        MetaPanel.Margin = vm.IsUser ? new Thickness(6, 0, 0, 0) : new Thickness(0, 0, 6, 0);
 
         if (vm.IsUser)
         {
@@ -77,5 +82,21 @@ public partial class ChatBubble : UserControl
         var dur = TimeSpan.FromMilliseconds(110);
         HoverScale.BeginAnimation(ScaleTransform.ScaleXProperty, new DoubleAnimation(to, dur));
         HoverScale.BeginAnimation(ScaleTransform.ScaleYProperty, new DoubleAnimation(to, dur));
+    }
+
+    private void Attachment_Click(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is not AttachmentViewModel attachment) return;
+        var main = Window.GetWindow(this) as MainWindow;
+        var hide = main?.HideOnFocusLoss ?? false;
+        if (main is not null) main.HideOnFocusLoss = false;
+        try
+        {
+            new AttachmentWindow(attachment) { Owner = Window.GetWindow(this) }.ShowDialog();
+        }
+        finally
+        {
+            if (main is not null) main.HideOnFocusLoss = hide;
+        }
     }
 }

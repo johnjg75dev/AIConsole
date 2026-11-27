@@ -1,4 +1,5 @@
 using System.Collections.Specialized;
+using System.Windows;
 using System.Windows.Controls;
 using System.IO;
 using System.Text;
@@ -121,5 +122,45 @@ public partial class ChatView : UserControl
     {
         if (sender is System.Windows.FrameworkElement fe && fe.DataContext is Conversation c)
             ViewModel?.SelectConversation(c);
+    }
+
+    private void ConversationMenu_Opened(object sender, RoutedEventArgs e)
+    {
+        if (sender is ContextMenu menu && menu.PlacementTarget is FrameworkElement target)
+            menu.DataContext = target.DataContext;
+    }
+
+    private static Conversation? ConversationFrom(object sender)
+    {
+        if ((sender as FrameworkElement)?.DataContext is Conversation direct) return direct;
+        if (sender is MenuItem item)
+        {
+            var menu = item.Parent as ContextMenu
+                       ?? ItemsControl.ItemsControlFromItemContainer(item) as ContextMenu;
+            if (menu?.PlacementTarget is FrameworkElement target)
+                return target.DataContext as Conversation;
+        }
+        return null;
+    }
+
+    private void RenameConversation_Click(object sender, RoutedEventArgs e)
+    {
+        if (ConversationFrom(sender) is not { } conversation || ViewModel is not { } vm) return;
+
+        var window = Window.GetWindow(this) as MainWindow;
+        var hide = window?.HideOnFocusLoss ?? false;
+        if (window is not null) window.HideOnFocusLoss = false;
+        try
+        {
+            var title = TextPromptWindow.Ask(window, "Rename conversation", "Conversation name", conversation.Title);
+            if (title is not null) vm.RenameConversation(conversation, title);
+        }
+        finally { if (window is not null) window.HideOnFocusLoss = hide; }
+    }
+
+    private void RemoveConversation_Click(object sender, RoutedEventArgs e)
+    {
+        if (ConversationFrom(sender) is { } conversation)
+            ViewModel?.DeleteConversation(conversation);
     }
 }

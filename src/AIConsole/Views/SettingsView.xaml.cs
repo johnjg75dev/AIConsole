@@ -35,6 +35,14 @@ public partial class SettingsView : UserControl
         if (sender is Button b && b.Tag is string hex) ViewModel?.SetAccent(hex);
     }
 
+    private void Theme_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        // Binding initialization and Cancel-restore also change SelectedItem; only
+        // an interaction with the picker should turn off "match Windows".
+        if (sender is not ComboBox combo || (!combo.IsKeyboardFocusWithin && !combo.IsDropDownOpen)) return;
+        if (ViewModel is { FollowWindowsTheme: true } vm) vm.FollowWindowsTheme = false;
+    }
+
     private void ImportFromFile_Click(object sender, RoutedEventArgs e)
     {
         var dlg = new Microsoft.Win32.OpenFileDialog
