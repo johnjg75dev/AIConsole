@@ -61,6 +61,7 @@ public partial class App : Application
         };
         _window.SetSlideEdge(_appSettings.SlideEdge);
         _window.SetAcrylic(_appSettings.PanelAcrylic);
+        _window.SetPanelOpacity(_appSettings.PanelOpacity);
 
         _settingsVm = new SettingsViewModel(_endpointRepo, _settingsRepo, _client, _refresh, null!, _chatVm);
         _settingsView = new SettingsView { DataContext = _settingsVm };
@@ -120,6 +121,8 @@ public partial class App : Application
                 case nameof(SettingsViewModel.PanelWidth):
                 case nameof(SettingsViewModel.PanelHeight):
                     _window.SetPanelSize(_appSettings.PanelWidth, _appSettings.PanelHeight); break;
+                case nameof(SettingsViewModel.PanelOpacity):
+                    _window.SetPanelOpacity(_appSettings.PanelOpacity); break;
             }
         };
 

@@ -69,6 +69,7 @@ public sealed class AppSettings
     public bool AlwaysOnTop { get; set; } = true;      // popup stays above other windows
     public double PanelWidth { get; set; }             // 0 = auto; Top slide defaults to full screen width
     public double PanelHeight { get; set; } = 600;     // panel height (px)
+    public double PanelOpacity { get; set; } = 1.0;    // 0.3 - 1.0
     public bool NotifyOnCompletion { get; set; } = true; // Windows notification when a reply finishes
 
     // Model refresh

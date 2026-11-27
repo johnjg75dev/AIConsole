@@ -64,15 +64,17 @@
             </Border.ContextMenu>
         </Border>
 
-        <Grid Grid.Row="1" Margin="2,3,2,0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
+        <StackPanel x:Name="Footer" Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Left" Margin="2,3,2,0">
+            <StackPanel x:Name="MetaPanel" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,6,0">
+                <TextBlock Text="{Binding DisplayName}" FontSize="10.5" FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                <TextBlock Text=" · " FontSize="10.5" Foreground="{DynamicResource TextDisabledBrush}" VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding TimestampText}" FontSize="10.5" Foreground="{DynamicResource TextDisabledBrush}"
+                           VerticalAlignment="Center"/>
+            </StackPanel>
 
-            <StackPanel x:Name="Actions" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Left"
-                        VerticalAlignment="Center" Opacity="0">
+            <StackPanel x:Name="Actions" Orientation="Horizontal" VerticalAlignment="Center"
+                        Opacity="0" Visibility="Collapsed">
                 <Button Style="{DynamicResource IconButton}" Content="✎" FontSize="12" Padding="5"
                         Command="{Binding EditCommand}" ToolTip="Edit message"/>
                 <Button Style="{DynamicResource IconButton}" Content="&#x29C9;" FontSize="12" Padding="5"
@@ -80,15 +82,6 @@
                 <Button Style="{DynamicResource IconButton}" Content="&#x2715;" FontSize="12" Padding="5"
                         Command="{Binding RemoveCommand}" ToolTip="Remove from history"/>
             </StackPanel>
-
-            <StackPanel x:Name="MetaPanel" Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right"
-                        VerticalAlignment="Center" Margin="6,0,0,0">
-                <TextBlock Text="{Binding DisplayName}" FontSize="10.5" FontWeight="SemiBold"
-                           Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
-                <TextBlock Text=" · " FontSize="10.5" Foreground="{DynamicResource TextDisabledBrush}" VerticalAlignment="Center"/>
-                <TextBlock Text="{Binding TimestampText}" FontSize="10.5" Foreground="{DynamicResource TextDisabledBrush}"
-                           VerticalAlignment="Center"/>
-            </StackPanel>
-        </Grid>
+        </StackPanel>
     </Grid>
 </UserControl>

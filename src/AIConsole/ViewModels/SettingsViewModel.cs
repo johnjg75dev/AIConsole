@@ -71,6 +71,7 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty] private bool _alwaysOnTop = true;
     [ObservableProperty] private double _panelWidth;
     [ObservableProperty] private double _panelHeight = 600;
+    [ObservableProperty] private double _panelOpacity = 1.0;
     [ObservableProperty] private bool _notifyOnCompletion = true;
     public ObservableCollection<string> SlideEdges { get; } = new() { "Top", "Left", "Right" };
 
@@ -94,6 +95,7 @@ public partial class SettingsViewModel : ObservableObject
         _showLineNumbers = _app.ShowLineNumbers; _codeFont = _app.CodeFont; _panelAcrylic = _app.PanelAcrylic;
         _startWithWindows = _app.StartWithWindows; _hideOnFocusLoss = _app.HideOnFocusLoss;
         _alwaysOnTop = _app.AlwaysOnTop; _panelWidth = _app.PanelWidth; _panelHeight = _app.PanelHeight; _notifyOnCompletion = _app.NotifyOnCompletion;
+        _panelOpacity = Math.Clamp(_app.PanelOpacity, 0.3, 1.0);
         _slideEdge = _app.SlideEdge.ToString(); _hotkeyText = _app.Hotkey; _refreshMinutes = _app.RefreshMinutes;
 
         Reload();
@@ -222,6 +224,7 @@ public partial class SettingsViewModel : ObservableObject
     partial void OnAlwaysOnTopChanged(bool value) { _app.AlwaysOnTop = value; }
     partial void OnPanelWidthChanged(double value) { _app.PanelWidth = Math.Max(0, value); }
     partial void OnPanelHeightChanged(double value) { _app.PanelHeight = value <= 0 ? 600 : value; }
+    partial void OnPanelOpacityChanged(double value) { _app.PanelOpacity = Math.Clamp(value, 0.3, 1.0); }
     partial void OnNotifyOnCompletionChanged(bool value) { _app.NotifyOnCompletion = value; }
 
     partial void OnStartWithWindowsChanged(bool value)
@@ -331,6 +334,7 @@ public partial class SettingsViewModel : ObservableObject
         StartWithWindows = _app.StartWithWindows; HideOnFocusLoss = _app.HideOnFocusLoss; SlideEdge = _app.SlideEdge.ToString();
         HotkeyText = _app.Hotkey; RefreshMinutes = _app.RefreshMinutes; AlwaysOnTop = _app.AlwaysOnTop;
         PanelWidth = _app.PanelWidth; PanelHeight = _app.PanelHeight; NotifyOnCompletion = _app.NotifyOnCompletion;
+        PanelOpacity = Math.Clamp(_app.PanelOpacity, 0.3, 1.0);
         Markdown.MarkdownRenderer.ShowLineNumbers = _app.ShowLineNumbers;
         _chat.RerenderMarkdown();
     }

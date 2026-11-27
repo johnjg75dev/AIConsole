@@ -58,6 +58,8 @@ public partial class MainWindow : Window
     {
         _customWidth = width; _panelHeight = height <= 0 ? 600 : height; ApplySize();
     }
+    public void SetPanelOpacity(double opacity) =>
+        PanelBorder.Opacity = Math.Clamp(opacity, 0.3, 1.0);
 
     private void ApplyAcrylic()
     {

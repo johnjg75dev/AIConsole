@@ -13,8 +13,8 @@ public partial class ChatBubble : UserControl
     {
         InitializeComponent();
         DataContextChanged += (_, _) => ApplyStyle();
-        RootGrid.MouseEnter += (_, _) => Fade(Actions, 1);
-        RootGrid.MouseLeave += (_, _) => Fade(Actions, 0);
+        RootGrid.MouseEnter += (_, _) => ShowActions(true);
+        RootGrid.MouseLeave += (_, _) => ShowActions(false);
         Bubble.MouseEnter += (_, _) => AnimateScale(1.008);
         Bubble.MouseLeave += (_, _) => AnimateScale(1.0);
         Loaded += (_, _) => ApplyStyle();
@@ -27,11 +27,7 @@ public partial class ChatBubble : UserControl
 
         // participant-side styling
         Bubble.HorizontalAlignment = vm.IsUser ? HorizontalAlignment.Right : HorizontalAlignment.Left;
-        Grid.SetColumn(Actions, vm.IsUser ? 0 : 2);
-        Grid.SetColumn(MetaPanel, vm.IsUser ? 2 : 0);
-        Actions.HorizontalAlignment = vm.IsUser ? HorizontalAlignment.Left : HorizontalAlignment.Right;
-        MetaPanel.HorizontalAlignment = vm.IsUser ? HorizontalAlignment.Right : HorizontalAlignment.Left;
-        MetaPanel.Margin = vm.IsUser ? new Thickness(6, 0, 0, 0) : new Thickness(0, 0, 6, 0);
+        Footer.HorizontalAlignment = vm.IsUser ? HorizontalAlignment.Right : HorizontalAlignment.Left;
 
         if (vm.IsUser)
         {
@@ -75,6 +71,20 @@ public partial class ChatBubble : UserControl
     private void Fade(UIElement el, double to)
     {
         el.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(to, TimeSpan.FromMilliseconds(120)));
+    }
+
+    private void ShowActions(bool show)
+    {
+        if (show)
+        {
+            Actions.Visibility = Visibility.Visible;
+            Fade(Actions, 1);
+            return;
+        }
+
+        var fade = new DoubleAnimation(0, TimeSpan.FromMilliseconds(110));
+        fade.Completed += (_, _) => { if (!RootGrid.IsMouseOver) Actions.Visibility = Visibility.Collapsed; };
+        Actions.BeginAnimation(UIElement.OpacityProperty, fade);
     }
 
     private void AnimateScale(double to)
