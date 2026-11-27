@@ -5,3 +5,5 @@ obj/
 *.suo
 artifacts/
 dist/
+.tools/
+__pycache__/

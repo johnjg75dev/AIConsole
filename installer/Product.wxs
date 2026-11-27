@@ -1,0 +1,35 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <!-- Per-user MSI that installs the self-contained single-file EXE. -->
+  <Package Name="AIConsole"
+           Manufacturer="AIConsole"
+           Version="$(var.Version)"
+           UpgradeCode="B1F6B8D2-3C45-4A1E-9F7A-2D8E6C4B1A90"
+           Scope="perUser">
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of AIConsole is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <StandardDirectory Id="LocalAppDataFolder">
+      <Directory Id="INSTALLFOLDER" Name="AIConsole" />
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="ApplicationProgramsFolder" Name="AIConsole" />
+    </StandardDirectory>
+
+    <Component Id="MainExecutable" Directory="INSTALLFOLDER" Guid="*">
+      <File Id="AIConsoleExe" Source="$(var.Source)" Name="AIConsole.exe" KeyPath="yes" />
+      <Shortcut Id="StartMenuShortcut"
+                Directory="ApplicationProgramsFolder"
+                Name="AIConsole"
+                Target="[INSTALLFOLDER]AIConsole.exe"
+                WorkingDirectory="INSTALLFOLDER" />
+      <RemoveFolder Id="RemoveShortcuts" Directory="ApplicationProgramsFolder" On="uninstall" />
+      <RegistryValue Root="HKCU" Key="Software\AIConsole" Name="installed" Type="integer" Value="1" KeyPath="no" />
+    </Component>
+
+    <Feature Id="Main" Title="AIConsole" Level="1">
+      <ComponentRef Id="MainExecutable" />
+    </Feature>
+  </Package>
+</Wix>

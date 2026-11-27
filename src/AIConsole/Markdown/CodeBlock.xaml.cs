@@ -26,7 +26,7 @@ public partial class CodeBlock : UserControl
     }
 
     public string Code { get => _code; set { _code = value; Rebuild(); } }
-    public string? Language { get => _language; set { _language = value; Rebuild(); } }
+    public new string? Language { get => _language; set { _language = value; Rebuild(); } }
 
     /// <summary>Copy button icon can be any glyph; text set by caller. Default "Copy".</summary>
     public bool ShowLineNumbers { get; set; } = true;

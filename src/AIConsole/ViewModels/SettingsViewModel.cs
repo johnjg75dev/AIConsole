@@ -31,7 +31,6 @@ public partial class EndpointVm : ObservableObject
 
     // tri-state Select All
     [ObservableProperty] private bool? _allSelected;
-    private bool _suppress;
     public void RefreshAllSelected()
     {
         if (Models.Count == 0) { AllSelected = false; return; }

@@ -1,0 +1,39 @@
+name: lint
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  lint:
+    name: Analyze and rebuild
+    runs-on: windows-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Check build driver syntax
+        run: |
+          python -m py_compile compile.py
+          python compile.py version
+
+      - name: Restore
+        run: dotnet restore AIConsole.slnx
+
+      # Compiler warnings are the lint gate. Keeping this in the build itself
+      # means local `compile.py build` enforces the same rules.
+      - name: Build (warnings as errors)
+        run: dotnet build AIConsole.slnx --no-restore --nologo -warnaserror
+
+      - name: Test
+        run: dotnet test AIConsole.slnx --no-build --nologo

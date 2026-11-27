@@ -48,14 +48,30 @@ Settings → **Import from other tools**:
 
 ## Build / run
 
+Double-click **`compile.bat`** (or run `./compile.ps1`) for an interactive menu covering dev builds,
+RC builds, patch/minor/major bumps, publishing, tests, debugging, and releases. Python 3 is required.
+
 ```powershell
-dotnet build src/AIConsole/AIConsole.csproj
-dotnet run   --project src/AIConsole
-# unit tests:
-dotnet test  tests/AIConsole.Tests/AIConsole.Tests.csproj
-# self-contained single-file:
+python compile.py                                  # interactive menu
+python compile.py build --kind dev                 # auto-incremented build number
+python compile.py publish                          # single-file EXE -> dist/AIConsole.exe
+python compile.py test                             # unit tests
+python compile.py debug                            # build + run
+python compile.py release --bump patch --no-github # EXEs + MSIs, no tag
+python compile.py release --bump patch             # commit/tag/push; Actions creates the release
+```
+
+Version state lives in `version.json` (`dev` builds increment the revision, `rc` produces
+`x.y.z-rc.N`, and patch/minor/major produce stable tags). Every compiled binary receives the current
+version. Release builds publish `win-x64`, `win-x86`, and `win-arm64` standalones plus per-user MSI
+installers into `dist/`.
+
+Raw `dotnet` commands still work:
+
+```powershell
+dotnet build AIConsole.slnx
+dotnet test  AIConsole.slnx
 dotnet publish src/AIConsole/AIConsole.csproj -p:PublishProfile=SingleFile
-# -> src/AIConsole/artifacts/SingleFile/AIConsole.exe
 ```
 
 Requires Windows + **.NET 10 SDK**. Data stored in `%APPDATA%\AIConsole\aiconsole.db`.
