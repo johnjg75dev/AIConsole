@@ -48,6 +48,8 @@ Settings → **Import from other tools**:
 
 ## Build / run
 
+All versioning and release rules are documented in **[VERSIONING.md](VERSIONING.md)**.
+
 Double-click **`compile.bat`** (or run `./compile.ps1`) for an interactive menu covering dev builds,
 RC builds, patch/minor/major bumps, publishing, tests, debugging, and releases. Python 3 is required.
 

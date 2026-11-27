@@ -299,7 +299,7 @@ AIConsole compile
   3  Patch release build  (new patch version)
   4  Minor release build
   5  Major release build
-  6  Publish single-file  (current version)
+  6  Publish single-file  (new build number)
   7  Run tests
   8  Debug                (build + run)
   9  Release locally      (no GitHub release)
