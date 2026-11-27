@@ -63,10 +63,12 @@
                 <Button Grid.Column="0" Style="{DynamicResource IconButton}" Content="&#x2630;" FontSize="15"
                         ToolTip="Toggle conversations" Command="{Binding ToggleSidebarCommand}" Margin="0,0,6,0"/>
                 <ComboBox Grid.Column="1" ItemsSource="{Binding Models}" SelectedItem="{Binding SelectedModel}"
-                          DisplayMemberPath="Display" MaxWidth="420" HorizontalAlignment="Left"
+                          DisplayMemberPath="Display" MinWidth="220" MaxWidth="420" HorizontalAlignment="Left"
                           ToolTip="Choose model" FontSize="12.5"/>
-                <Button Grid.Column="2" Style="{DynamicResource IconButton}" Content="&#x21BB;" FontSize="15"
-                        ToolTip="Refresh models" Command="{Binding RebuildModelsCommand}"/>
+                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <Button Content="Decision" ToolTip="Evaluate a task with a System One decision model" Click="Decision_Click" Margin="0,0,6,0"/>
+                    <Button Style="{DynamicResource IconButton}" Content="&#x21BB;" FontSize="15" ToolTip="Refresh models" Command="{Binding RebuildModelsCommand}"/>
+                </StackPanel>
             </Grid>
 
             <!-- messages -->
@@ -79,30 +81,79 @@
                 </ItemsControl>
             </ScrollViewer>
 
+            <!-- A quiet starting point when there are no messages yet. -->
+            <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center" IsHitTestVisible="False" Margin="20">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers><DataTrigger Binding="{Binding Messages.Count}" Value="0"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+                <Border Width="42" Height="42" CornerRadius="14" Background="{DynamicResource AccentGradientBrush}" HorizontalAlignment="Center" Margin="0,0,0,12">
+                    <TextBlock Text="✦" Foreground="{DynamicResource OnAccentBrush}" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <TextBlock Text="Start a conversation" FontSize="19" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                <TextBlock Text="Choose a model and ask anything." Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12.5" Margin="0,6,0,0" HorizontalAlignment="Center"/>
+            </StackPanel>
+
             <!-- status -->
             <TextBlock Grid.Row="2" Text="{Binding StatusMessage}" Foreground="{DynamicResource ErrorBrush}"
                        FontSize="11.5" Margin="14,0,14,2" TextWrapping="Wrap"
                        Visibility="{Binding StatusMessage, Converter={x:Static converters:StringToVisibilityConverter.Instance}}"/>
 
             <!-- composer -->
-            <Grid Grid.Row="3" Margin="12,4,12,12">
+            <StackPanel Grid.Row="3" Margin="12,4,12,12">
+                <ItemsControl ItemsSource="{Binding PendingAttachments}" Margin="0,0,0,4">
+                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate><DataTemplate>
+                        <Border Background="{DynamicResource SurfaceAltBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Margin="0,0,5,4" Padding="7,2">
+                            <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding Name}" VerticalAlignment="Center" MaxWidth="180" TextTrimming="CharacterEllipsis"/>
+                                <Button Content="✕" ToolTip="Remove attachment" Style="{DynamicResource IconButton}" Padding="5" Command="{Binding DataContext.RemoveAttachmentCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}" CommandParameter="{Binding}"/>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate></ItemsControl.ItemTemplate>
+                </ItemsControl>
                 <Border Background="{DynamicResource SurfaceAltBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                         CornerRadius="14" Padding="4">
                     <Grid>
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                        <TextBox x:Name="InputBox" BorderThickness="0" Background="Transparent" FontSize="13.5"
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Content="📎" ToolTip="Attach text or image files" Style="{DynamicResource IconButton}" Click="Attach_Click" VerticalAlignment="Bottom" Margin="3,4"/>
+                        <TextBlock Grid.Column="1" Text="Message your model…" Margin="12,8,0,0" FontSize="13.5"
+                                   Foreground="{DynamicResource TextDisabledBrush}" IsHitTestVisible="False" Panel.ZIndex="1">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers><DataTrigger Binding="{Binding InputText}" Value=""><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        <TextBox Grid.Column="1" x:Name="InputBox" BorderThickness="0" Background="Transparent" FontSize="13.5"
                                  Text="{Binding InputText, UpdateSourceTrigger=PropertyChanged}"
                                  TextWrapping="Wrap" AcceptsReturn="True" MinHeight="38" MaxHeight="140"
                                  VerticalScrollBarVisibility="Auto" Padding="8,8"
                                  ToolTip="Enter to send · Shift+Enter for newline" PreviewKeyDown="InputBox_PreviewKeyDown"/>
-                        <Button Grid.Column="1" x:Name="SendButton" Width="40" Height="40" Margin="4" VerticalAlignment="Bottom"
-                                Style="{DynamicResource AccentButton}" ToolTip="Send" FontFamily="{DynamicResource FontGlyph}" FontSize="15"
+                        <Button Grid.Column="2" x:Name="SendButton" Width="40" Height="40" Margin="4" VerticalAlignment="Bottom"
+                                ToolTip="Send" FontFamily="{DynamicResource FontGlyph}" FontSize="15"
                                 Click="Send_Click">
-                            <TextBlock Text="&#x27A4;"/>
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource AccentButton}">
+                                    <Style.Triggers><DataTrigger Binding="{Binding IsStreaming}" Value="True"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                            <TextBlock Text="&#x27A4;" Foreground="{DynamicResource OnAccentBrush}"/>
+                        </Button>
+                        <Button Grid.Column="2" Width="40" Height="40" Margin="4" VerticalAlignment="Bottom"
+                                Command="{Binding StopCommand}" ToolTip="Stop generating" Content="■">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource FluentButton}">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers><DataTrigger Binding="{Binding IsStreaming}" Value="True"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers>
+                                </Style>
+                            </Button.Style>
                         </Button>
                     </Grid>
                 </Border>
-            </Grid>
+            </StackPanel>
         </Grid>
     </Grid>
 </UserControl>

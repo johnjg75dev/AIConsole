@@ -8,7 +8,7 @@ panel drops down from the top of your screen (or slides in from the left/right).
 
 - **Tray app** — lives in the system tray; global hotkey; start with Windows.
 - **Slide-in panel** — top-center slide-down (default) or left/right side slide-out; optional
-  **acrylic** backdrop; hides on `Esc` / focus loss / hotkey; `Enter` to send, `Shift+Enter` for newline.
+  **acrylic** backdrop; hides on `Esc` / hotkey, with optional hide on focus loss (off by default); `Enter` to send, `Shift+Enter` for newline.
 - **OpenAI-compatible** providers — any remote endpoint; **optional API key** (stored DPAPI-encrypted).
   - **Auto-fetch models** via `GET {base}/v1/models`.
   - Per-model **checkboxes** + **Select All**.
@@ -22,6 +22,18 @@ panel drops down from the top of your screen (or slides in from the left/right).
 - **Theming** — live-switchable palettes (Midnight Neon, Cyber Glass, Ember, Nord, Forest, Solar Flare,
   Clean Day), accent overrides, match-Windows dark/light, code-font selection.
 - **Streaming** — token-by-token SSE with **Stop**; partial output kept.
+- **Attachments** — attach UTF-8 text or PNG, JPEG, GIF, and WebP images using the paperclip.
+  Text is included in the message; images use OpenAI-compatible image content and require a vision-capable
+  model and provider. Limit: 5 MB per file and 10 MB per message. Attachments are stored in the local
+  SQLite database and sent again as part of subsequent conversation history. Do not attach secrets unless
+  you intend to send them to the selected provider.
+- **Edit history** — use the edit action or right-click a message. Saving changes affects future requests;
+  it does not regenerate or delete later replies, and existing attachments remain unchanged.
+- **Decision models** — select a compatible model and click **Decision** to submit a state and a typed
+  choice, score, or noul question to the selected endpoint's `/v1/systemone` API. Choice options can use
+  `name = description`; score levels are ordered. Answers and probabilities are presented in a readable
+  summary with an expandable raw response. Results are not added to chat history. This is a System One-compatible integration (such as Jev), not a generic adapter for every
+  provider's decision API; the configured endpoint and model must support that schema.
 
 ## Import from other installations
 

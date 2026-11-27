@@ -30,7 +30,7 @@ public partial class MainWindow : Window
     private HwndSource? _source;
 
     public Func<AppSettings>? SettingsProvider { get; set; }
-    public bool HideOnFocusLoss { get; set; } = true;
+    public bool HideOnFocusLoss { get; set; } = false;
     public event Action? ToggleSettings;
 
     public MainWindow()

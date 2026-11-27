@@ -115,6 +115,8 @@
                     </Grid>
                     <CheckBox Content="Always on top" IsChecked="{Binding AlwaysOnTop}" FontSize="12.5" Margin="0,4"/>
                     <CheckBox Content="Hide panel when it loses focus" IsChecked="{Binding HideOnFocusLoss}" FontSize="12.5" Margin="0,4"/>
+                    <TextBlock Text="When off, the panel stays visible until you hide it with Esc, the hotkey, or the close button."
+                               Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" TextWrapping="Wrap" Margin="20,0,0,6"/>
                     <CheckBox Content="Acrylic / blurred backdrop" IsChecked="{Binding PanelAcrylic}" FontSize="12.5" Margin="0,4"/>
                     <CheckBox Content="Start with Windows" IsChecked="{Binding StartWithWindows}" FontSize="12.5" Margin="0,4"/>
                     <Grid Margin="0,10,0,4"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>

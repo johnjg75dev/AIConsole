@@ -64,7 +64,7 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty] private string _codeFont = "Cascadia Code";
     [ObservableProperty] private bool _panelAcrylic = true;
     [ObservableProperty] private bool _startWithWindows;
-    [ObservableProperty] private bool _hideOnFocusLoss = true;
+    [ObservableProperty] private bool _hideOnFocusLoss = false;
     [ObservableProperty] private string _slideEdge = "Top";
     [ObservableProperty] private string _hotkeyText = "Ctrl+`";
     [ObservableProperty] private int _refreshMinutes = 360;

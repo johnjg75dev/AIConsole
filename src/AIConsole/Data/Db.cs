@@ -63,6 +63,14 @@ public sealed class Db : IDisposable
                 participant     TEXT,
                 created_at      TEXT NOT NULL
             );
+            CREATE TABLE IF NOT EXISTS message_attachments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                message_id INTEGER NOT NULL REFERENCES messages(id) ON DELETE CASCADE,
+                name TEXT NOT NULL,
+                media_type TEXT NOT NULL,
+                data BLOB NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_attachments_message ON message_attachments(message_id);
             CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages(conversation_id);
             """);
     }

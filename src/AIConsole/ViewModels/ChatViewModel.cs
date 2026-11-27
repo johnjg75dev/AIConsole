@@ -26,6 +26,7 @@ public partial class ChatViewModel : ObservableObject
     public ObservableCollection<Conversation> Conversations { get; } = new();
     public ObservableCollection<MessageViewModel> Messages { get; } = new();
     public ObservableCollection<ModelChoice> Models { get; } = new();
+    public ObservableCollection<ChatAttachment> PendingAttachments { get; } = new();
 
     [ObservableProperty] private Conversation? _selectedConversation;
     [ObservableProperty] private ModelChoice? _selectedModel;
@@ -71,6 +72,7 @@ public partial class ChatViewModel : ObservableObject
             foreach (var m in _chat.Messages(value.Id))
             {
                 var vm = new MessageViewModel(m);
+                vm.AttachmentsLabel = AttachmentLabel(_chat.Attachments(m.Id));
                 Hook(vm);
                 Messages.Add(vm);
             }
@@ -87,6 +89,7 @@ public partial class ChatViewModel : ObservableObject
         if (IsStreaming) Stop();
         SelectedConversation = null;
         Messages.Clear();
+        PendingAttachments.Clear();
         StatusMessage = "";
         MessagesChanged?.Invoke();
     }
@@ -144,7 +147,7 @@ public partial class ChatViewModel : ObservableObject
     public async Task SendAsync()
     {
         var text = InputText?.Trim() ?? "";
-        if (text.Length == 0 || IsStreaming) return;
+        if ((text.Length == 0 && PendingAttachments.Count == 0) || IsStreaming) return;
 
         if (SelectedModel is not { } model)
         {
@@ -168,7 +171,7 @@ public partial class ChatViewModel : ObservableObject
             // ensure conversation
             if (SelectedConversation is null)
             {
-                var title = text.Length <= 42 ? text : text[..42] + "…";
+                var title = text.Length == 0 ? PendingAttachments[0].Name : text.Length <= 42 ? text : text[..42] + "…";
                 SelectedConversation = _chat.Create(new Conversation { Title = title, Model = model.Key });
                 Conversations.Insert(0, SelectedConversation);
             }
@@ -183,6 +186,9 @@ public partial class ChatViewModel : ObservableObject
                 Participant = "You", ModelId = model.Key,
             });
             userVm.Id = userMsg.Id;
+            foreach (var attachment in PendingAttachments) _chat.AddAttachment(userMsg.Id, attachment);
+            userVm.AttachmentsLabel = AttachmentLabel(PendingAttachments);
+            PendingAttachments.Clear();
             Hook(userVm);
             Messages.Add(userVm);
             MessageAdded?.Invoke();
@@ -197,7 +203,7 @@ public partial class ChatViewModel : ObservableObject
             var history = _chat.Messages(convId)
                 .Select(m => new ChatMessageDto(
                     m.Role switch { ChatRole.User => "user", ChatRole.Assistant => "assistant", _ => "system" },
-                    m.Content))
+                    BuildContent(m)))
                 .ToList();
 
             _cts = new CancellationTokenSource();
@@ -269,10 +275,57 @@ public partial class ChatViewModel : ObservableObject
 
     // ── message removal ──
 
-    private void Hook(MessageViewModel vm) => vm.RemoveRequested += OnRemoveRequested;
+    private static string AttachmentLabel(IEnumerable<ChatAttachment> attachments) =>
+        string.Join("  ·  ", attachments.Select(a => "📎 " + a.Name));
+
+    private object BuildContent(ChatMessage message)
+    {
+        var attachments = _chat.Attachments(message.Id);
+        if (attachments.Count == 0) return message.Content;
+        if (attachments.All(a => !a.IsImage))
+            return message.Content + string.Concat(attachments.Select(a => $"\n\nAttachment: {a.Name}\n\n{System.Text.Encoding.UTF8.GetString(a.Data)}"));
+        var parts = new List<object>();
+        if (!string.IsNullOrWhiteSpace(message.Content)) parts.Add(new { type = "text", text = message.Content });
+        foreach (var attachment in attachments)
+        {
+            if (attachment.IsImage)
+                parts.Add(new { type = "image_url", image_url = new { url = $"data:{attachment.MediaType};base64,{Convert.ToBase64String(attachment.Data)}" } });
+            else
+                parts.Add(new { type = "text", text = $"Attachment: {attachment.Name}\n\n{System.Text.Encoding.UTF8.GetString(attachment.Data)}" });
+        }
+        return parts;
+    }
+
+    [RelayCommand]
+    private void RemoveAttachment(ChatAttachment attachment) => PendingAttachments.Remove(attachment);
+
+    public async Task<string> DecideAsync(string state, string type, string instructions, IReadOnlyList<string> criteria, CancellationToken ct)
+    {
+        if (SelectedModel is not { } model) throw new InvalidOperationException("Select a model first.");
+        var ep = _endpoints.Get(model.Key.Split("::", 2)[0]) ?? throw new InvalidOperationException("Endpoint not found.");
+        return await _client.DecideAsync(ep.BaseUrl, ep.ApiKey, model.ModelId, state, type, instructions, criteria, ct);
+    }
+
+    private void Hook(MessageViewModel vm)
+    {
+        vm.RemoveRequested += OnRemoveRequested;
+        vm.EditRequested += OnEditRequested;
+    }
+
+    private void OnEditRequested(MessageViewModel vm)
+    {
+        if (IsStreaming) { StatusMessage = "Stop the current response before editing history."; return; }
+        if (vm.Id == 0 || string.IsNullOrWhiteSpace(vm.EditText)) { StatusMessage = "Message text cannot be empty."; return; }
+        _chat.UpdateContent(vm.Id, vm.EditText);
+        vm.RawMarkdown = vm.EditText;
+        vm.RenderMarkdown();
+        vm.IsEditing = false;
+        StatusMessage = "Message updated. Later replies were not regenerated.";
+    }
 
     private void OnRemoveRequested(MessageViewModel vm)
     {
+        if (IsStreaming) { StatusMessage = "Stop the current response before removing messages."; return; }
         if (vm.Id != 0) _chat.DeleteMessage(vm.Id);
         RemoveVm(vm);
     }
