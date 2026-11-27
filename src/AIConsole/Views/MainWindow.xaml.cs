@@ -26,6 +26,7 @@ public partial class MainWindow : Window
     private double _panelHeight = 600;
     private bool _alwaysOnTop = true;
     private bool _acrylic = true;
+    private double _panelOpacity = 1.0;
     private bool _visible;
     private HwndSource? _source;
 
@@ -39,7 +40,9 @@ public partial class MainWindow : Window
         _slide = (TranslateTransform)RootGrid.RenderTransform;
         Deactivated += OnDeactivated;
         KeyDown += OnKeyDown;
-        SourceInitialized += (_, _) => ApplyAcrylic();
+        SourceInitialized += (_, _) => ApplyBackdrop();
+        ThemeManager.ThemeChanged += OnThemeChanged;
+        Closed += (_, _) => ThemeManager.ThemeChanged -= OnThemeChanged;
     }
 
     public IntPtr Handle => new WindowInteropHelper(this).EnsureHandle();
@@ -52,16 +55,44 @@ public partial class MainWindow : Window
     }
 
     public void SetSlideEdge(SlideEdge edge) => _edge = edge;
-    public void SetAcrylic(bool on) { _acrylic = on; ApplyAcrylic(); }
+    public void SetAcrylic(bool on) { _acrylic = on; ApplyBackdrop(); }
     public void SetAlwaysOnTop(bool on) { _alwaysOnTop = on; Topmost = on; }
     public void SetPanelSize(double width, double height)
     {
         _customWidth = width; _panelHeight = height <= 0 ? 600 : height; ApplySize();
     }
-    public void SetPanelOpacity(double opacity) =>
-        PanelBorder.Opacity = Math.Clamp(opacity, 0.3, 1.0);
 
-    private void ApplyAcrylic()
+    /// <summary>
+    /// Changes the panel background's alpha instead of fading the entire window, so
+    /// the desktop shows through while text and controls stay fully readable.
+    /// </summary>
+    public void SetPanelOpacity(double opacity)
+    {
+        _panelOpacity = Math.Clamp(opacity, 0.3, 1.0);
+        ApplyPanelBackground();
+        ApplyBackdrop();
+    }
+
+    private void ApplyPanelBackground()
+    {
+        if (_panelOpacity >= 0.999)
+        {
+            // Let the theme keep control of the background at full opacity.
+            PanelBorder.SetResourceReference(Border.BackgroundProperty, "SurfaceBrush");
+            return;
+        }
+
+        var surface = Application.Current?.Resources["SurfaceBrush"] as SolidColorBrush;
+        var color = surface?.Color ?? Colors.Black;
+        var brush = new SolidColorBrush(Color.FromArgb(
+            (byte)Math.Round(color.A * _panelOpacity), color.R, color.G, color.B));
+        brush.Freeze();
+        PanelBorder.Background = brush;
+    }
+
+    private void OnThemeChanged(string _) => ApplyPanelBackground();
+
+    private void ApplyBackdrop()
     {
         try
         {
@@ -69,7 +100,12 @@ public partial class MainWindow : Window
             if (hwnd == IntPtr.Zero) return;
             int dark = 1;
             DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ref dark, sizeof(int));
-            int backdrop = _acrylic ? DWMSBT_TRANSIENTWINDOW : DWMSBT_NONE;
+
+            // Windows acrylic paints its own opaque, blurred surface behind the
+            // window. That would hide the desktop whenever WPF is translucent, so
+            // drop the system backdrop and let the panel's alpha do the blending.
+            var acrylic = _acrylic && _panelOpacity >= 0.999;
+            int backdrop = acrylic ? DWMSBT_TRANSIENTWINDOW : DWMSBT_NONE;
             DwmSetWindowAttribute(hwnd, DWMWA_SYSTEMBACKDROP_TYPE, ref backdrop, sizeof(int));
         }
         catch { /* older Windows: solid surface */ }

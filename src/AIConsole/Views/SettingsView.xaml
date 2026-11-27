@@ -197,7 +197,7 @@
                             <Grid.ColumnDefinitions><ColumnDefinition Width="250"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0">
                                 <TextBlock Text="Panel opacity" Style="{StaticResource FormLabel}"/>
-                                <TextBlock Text="Lower values make the whole panel more transparent." Style="{StaticResource FormHelp}"/>
+                                <TextBlock Text="Lower values let you see the desktop through the panel background." Style="{StaticResource FormHelp}"/>
                             </StackPanel>
                             <Grid Grid.Column="1">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
