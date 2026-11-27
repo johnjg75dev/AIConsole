@@ -14,11 +14,15 @@ public partial class CodeBlock : UserControl
     private string _code = "";
     private string? _language;
 
+    private readonly Action<string> _onThemeChanged;
+
     public CodeBlock()
     {
         InitializeComponent();
         CopyButton.Click += (_, _) => Copy();
-        ThemeManager.ThemeChanged += _ => Rebuild();
+        _onThemeChanged = _ => Rebuild();
+        ThemeManager.ThemeChanged += _onThemeChanged;
+        Unloaded += (_, _) => ThemeManager.ThemeChanged -= _onThemeChanged;
     }
 
     public string Code { get => _code; set { _code = value; Rebuild(); } }

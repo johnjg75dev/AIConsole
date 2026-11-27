@@ -45,12 +45,18 @@ public partial class ChatBubble : UserControl
         if (Bubble.ContextMenu is not null) Bubble.ContextMenu.DataContext = vm;
 
         UpdateStreaming(vm.IsStreaming, vm.RawMarkdown);
-        vm.PropertyChanged += (_, e) =>
-        {
-            if (e.PropertyName is nameof(MessageViewModel.IsStreaming)) UpdateStreaming(vm.IsStreaming, vm.RawMarkdown);
-            else if (e.PropertyName is nameof(MessageViewModel.RawMarkdown)) StreamingText.Text = vm.RawMarkdown;
-            else if (e.PropertyName is nameof(MessageViewModel.Rendered)) { /* bound */ }
-        };
+        if (_hooked is not null) _hooked.PropertyChanged -= OnVmPropertyChanged;
+        _hooked = vm;
+        vm.PropertyChanged += OnVmPropertyChanged;
+    }
+
+    private MessageViewModel? _hooked;
+
+    private void OnVmPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (sender is not MessageViewModel vm) return;
+        if (e.PropertyName is nameof(MessageViewModel.IsStreaming)) UpdateStreaming(vm.IsStreaming, vm.RawMarkdown);
+        else if (e.PropertyName is nameof(MessageViewModel.RawMarkdown)) StreamingText.Text = vm.RawMarkdown;
     }
 
     private void UpdateStreaming(bool streaming, string text)
