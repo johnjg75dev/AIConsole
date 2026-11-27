@@ -38,6 +38,7 @@ public partial class ChatViewModel : ObservableObject
 
     public bool EnterToSend => _appSettings.EnterToSend;
 
+    public event Action<string, string>? MessageCompleted;
     public event Action? MessageAdded;
     public event Action? MessagesChanged;
 
@@ -215,6 +216,8 @@ public partial class ChatViewModel : ObservableObject
 
             PersistAssistant(convId, sb.ToString(), model, assistantVm);
             ReloadConversationsOrder();
+            var preview = sb.Length > 120 ? sb.ToString(0, 120) + "…" : sb.ToString();
+            MessageCompleted?.Invoke(model.ModelId, preview);
         }
         catch (OperationCanceledException)
         {

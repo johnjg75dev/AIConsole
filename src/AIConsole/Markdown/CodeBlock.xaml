@@ -21,7 +21,7 @@
                 <TextBlock x:Name="LanguageLabel" Grid.Column="0" FontFamily="{DynamicResource FontMono}"
                            FontSize="10.5" Foreground="{DynamicResource SyntaxLineNumberBrush}"
                            Padding="12,5" VerticalAlignment="Center" Text="code" FontWeight="SemiBold"/>
-                <Button x:Name="CopyButton" Grid.Column="1" Style="{DynamicResource IconButton}" Content="&#xE8C8;"
+                <Button x:Name="CopyButton" Grid.Column="1" Style="{DynamicResource IconButton}" Content="&#x29C9;"
                         ToolTip="Copy code" Padding="8,4" FontSize="13"/>
             </Grid>
 

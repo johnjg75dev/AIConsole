@@ -66,5 +66,10 @@ public sealed class TrayService : IDisposable
         return SystemIcons.Application;
     }
 
+    public void ShowToast(string title, string message)
+    {
+        try { _tray.ShowBalloonTip(title, message, Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Info); } catch { }
+    }
+
     public void Dispose() => _tray.Dispose();
 }

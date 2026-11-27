@@ -68,6 +68,10 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty] private string _slideEdge = "Top";
     [ObservableProperty] private string _hotkeyText = "Ctrl+`";
     [ObservableProperty] private int _refreshMinutes = 360;
+    [ObservableProperty] private bool _alwaysOnTop = true;
+    [ObservableProperty] private double _panelWidth;
+    [ObservableProperty] private double _panelHeight = 600;
+    [ObservableProperty] private bool _notifyOnCompletion = true;
     public ObservableCollection<string> SlideEdges { get; } = new() { "Top", "Left", "Right" };
 
     public event Action<string>? Status;
@@ -89,6 +93,7 @@ public partial class SettingsViewModel : ObservableObject
         _theme = _app.Theme; _accentOverride = _app.AccentOverride; _followWindowsTheme = _app.FollowWindowsTheme;
         _showLineNumbers = _app.ShowLineNumbers; _codeFont = _app.CodeFont; _panelAcrylic = _app.PanelAcrylic;
         _startWithWindows = _app.StartWithWindows; _hideOnFocusLoss = _app.HideOnFocusLoss;
+        _alwaysOnTop = _app.AlwaysOnTop; _panelWidth = _app.PanelWidth; _panelHeight = _app.PanelHeight; _notifyOnCompletion = _app.NotifyOnCompletion;
         _slideEdge = _app.SlideEdge.ToString(); _hotkeyText = _app.Hotkey; _refreshMinutes = _app.RefreshMinutes;
 
         Reload();
@@ -202,22 +207,26 @@ public partial class SettingsViewModel : ObservableObject
 
     partial void OnShowLineNumbersChanged(bool value)
     {
-        _app.ShowLineNumbers = value; Markdown.MarkdownRenderer.ShowLineNumbers = value; Save(); _chat.RerenderMarkdown();
+        _app.ShowLineNumbers = value; Markdown.MarkdownRenderer.ShowLineNumbers = value;  _chat.RerenderMarkdown();
     }
 
     partial void OnCodeFontChanged(string value)
     {
-        _app.CodeFont = value; Save();
+        _app.CodeFont = value; 
         try { System.Windows.Application.Current.Resources["FontMono"] = new System.Windows.Media.FontFamily(value + ", Cascadia Code, Consolas, Courier New"); } catch { }
     }
-    partial void OnPanelAcrylicChanged(bool value) { _app.PanelAcrylic = value; Save(); }
-    partial void OnHideOnFocusLossChanged(bool value) { _app.HideOnFocusLoss = value; Save(); }
-    partial void OnSlideEdgeChanged(string value) { if (Enum.TryParse<SlideEdge>(value, out var e)) { _app.SlideEdge = e; Save(); } }
-    partial void OnRefreshMinutesChanged(int value) { _app.RefreshMinutes = Math.Clamp(value, 1, 10080); Save(); }
+    partial void OnPanelAcrylicChanged(bool value) { _app.PanelAcrylic = value;  }
+    partial void OnHideOnFocusLossChanged(bool value) { _app.HideOnFocusLoss = value;  }
+    partial void OnSlideEdgeChanged(string value) { if (Enum.TryParse<SlideEdge>(value, out var e)) { _app.SlideEdge = e;  } }
+    partial void OnRefreshMinutesChanged(int value) { _app.RefreshMinutes = Math.Clamp(value, 1, 10080);  }
+    partial void OnAlwaysOnTopChanged(bool value) { _app.AlwaysOnTop = value; }
+    partial void OnPanelWidthChanged(double value) { _app.PanelWidth = Math.Max(0, value); }
+    partial void OnPanelHeightChanged(double value) { _app.PanelHeight = value <= 0 ? 600 : value; }
+    partial void OnNotifyOnCompletionChanged(bool value) { _app.NotifyOnCompletion = value; }
 
     partial void OnStartWithWindowsChanged(bool value)
     {
-        _app.StartWithWindows = value; Save(); Services.StartupService.SetEnabled(value);
+        _app.StartWithWindows = value;  Services.StartupService.SetEnabled(value);
     }
 
     public void SetAccent(string? hex) => AccentOverride = hex;
@@ -226,7 +235,7 @@ public partial class SettingsViewModel : ObservableObject
     {
         _app.Theme = Theme; _app.AccentOverride = AccentOverride; _app.FollowWindowsTheme = FollowWindowsTheme;
         Services.ThemeManager.Apply(FollowWindowsTheme ? null : Theme, AccentOverride, FollowWindowsTheme);
-        Save();
+        
     }
 
     // ── import ──
@@ -282,10 +291,52 @@ public partial class SettingsViewModel : ObservableObject
     {
         if (_hotkey.Register(hk))
         {
-            _app.Hotkey = hk.ToString(); HotkeyText = hk.ToString(); Save();
+            _app.Hotkey = hk.ToString(); HotkeyText = hk.ToString(); 
         }
         else HotkeyText = _hotkey.Current?.ToString() ?? _app.Hotkey; // revert display
     }
+
+    // ── Apply / Cancel with snapshot + theme revert ──
+    private AppSettings _snapshot = new();
+    public event Action? RequestClose;
+
+    public void BeginEdit() { _snapshot = Clone(_app); }
+
+    [RelayCommand]
+    public void Apply()
+    {
+        Save();
+        Services.StartupService.SetEnabled(_app.StartWithWindows);
+        if (!string.IsNullOrWhiteSpace(_app.Hotkey)) _hotkey.Register(Hotkey.Parse(_app.Hotkey));
+        Emit("Settings applied.");
+        RequestClose?.Invoke();
+    }
+
+    [RelayCommand]
+    public void Cancel()
+    {
+        _app = Clone(_snapshot);
+        _settings.Set(SettingKeys.Settings, _app);
+        Services.ThemeManager.Apply(_app.FollowWindowsTheme ? null : _app.Theme, _app.AccentOverride, _app.FollowWindowsTheme);
+        Services.StartupService.SetEnabled(_app.StartWithWindows);
+        _hotkey.Register(Hotkey.Parse(_app.Hotkey));
+        RestoreFromApp();
+        RequestClose?.Invoke();
+    }
+
+    private void RestoreFromApp()
+    {
+        Theme = _app.Theme; AccentOverride = _app.AccentOverride; FollowWindowsTheme = _app.FollowWindowsTheme;
+        ShowLineNumbers = _app.ShowLineNumbers; CodeFont = _app.CodeFont; PanelAcrylic = _app.PanelAcrylic;
+        StartWithWindows = _app.StartWithWindows; HideOnFocusLoss = _app.HideOnFocusLoss; SlideEdge = _app.SlideEdge.ToString();
+        HotkeyText = _app.Hotkey; RefreshMinutes = _app.RefreshMinutes; AlwaysOnTop = _app.AlwaysOnTop;
+        PanelWidth = _app.PanelWidth; PanelHeight = _app.PanelHeight; NotifyOnCompletion = _app.NotifyOnCompletion;
+        Markdown.MarkdownRenderer.ShowLineNumbers = _app.ShowLineNumbers;
+        _chat.RerenderMarkdown();
+    }
+
+    private static AppSettings Clone(AppSettings a) => System.Text.Json.JsonSerializer.Deserialize<AppSettings>(
+        System.Text.Json.JsonSerializer.Serialize(a))!;
 
     private void Save()
     {

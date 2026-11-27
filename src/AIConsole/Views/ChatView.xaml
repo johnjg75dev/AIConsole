@@ -32,7 +32,7 @@
                                         <TextBlock Text="{Binding Title}" FontSize="12.5" TextTrimming="CharacterEllipsis"
                                                    Foreground="{DynamicResource TextPrimaryBrush}"/>
                                     </Border>
-                                    <Button Grid.Column="1" Style="{DynamicResource IconButton}" Content="&#xE74D;" FontSize="11"
+                                    <Button Grid.Column="1" Style="{DynamicResource IconButton}" Content="&#x2715;" FontSize="11"
                                             Opacity="0.5" ToolTip="Delete chat"
                                             Command="{Binding DataContext.DeleteConversationCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                             CommandParameter="{Binding}"/>
@@ -60,12 +60,12 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <Button Grid.Column="0" Style="{DynamicResource IconButton}" Content="&#xE700;" FontSize="15"
+                <Button Grid.Column="0" Style="{DynamicResource IconButton}" Content="&#x2630;" FontSize="15"
                         ToolTip="Toggle conversations" Command="{Binding ToggleSidebarCommand}" Margin="0,0,6,0"/>
                 <ComboBox Grid.Column="1" ItemsSource="{Binding Models}" SelectedItem="{Binding SelectedModel}"
                           DisplayMemberPath="Display" MaxWidth="420" HorizontalAlignment="Left"
                           ToolTip="Choose model" FontSize="12.5"/>
-                <Button Grid.Column="2" Style="{DynamicResource IconButton}" Content="&#xE946;" FontSize="15"
+                <Button Grid.Column="2" Style="{DynamicResource IconButton}" Content="&#x21BB;" FontSize="15"
                         ToolTip="Refresh models" Command="{Binding RebuildModelsCommand}"/>
             </Grid>
 
@@ -98,7 +98,7 @@
                         <Button Grid.Column="1" x:Name="SendButton" Width="40" Height="40" Margin="4" VerticalAlignment="Bottom"
                                 Style="{DynamicResource AccentButton}" ToolTip="Send" FontFamily="{DynamicResource FontGlyph}" FontSize="15"
                                 Click="Send_Click">
-                            <TextBlock Text="&#xE724;"/>
+                            <TextBlock Text="&#x27A4;"/>
                         </Button>
                     </Grid>
                 </Border>

@@ -85,6 +85,21 @@ public partial class App : Application
         _tray.SettingsRequested += () => { _window.SetShowingSettings(true); _window.ShowPanel(); };
         _tray.QuitRequested += Quit;
 
+        // windows notification when a reply completes
+        _chatVm.MessageCompleted += (model, preview) =>
+        {
+            _appSettings = _settingsVm.App;
+            if (_appSettings.NotifyOnCompletion) _tray.ShowToast("AIConsole - " + model, preview);
+        };
+
+        // settings apply/cancel + opening settings starts edit session
+        _settingsVm.RequestClose += () => _window.SetShowingSettings(false);
+        _window.ToggleSettings += () => { if (_window.ShowingSettings) _settingsVm.BeginEdit(); };
+
+        // sizing + always-on-top
+        _window.SetAlwaysOnTop(_appSettings.AlwaysOnTop);
+        _window.SetPanelSize(_appSettings.PanelWidth, _appSettings.PanelHeight);
+
         // react to appearance changes
         ThemeManager.ThemeChanged += _ => { };
 
@@ -100,6 +115,11 @@ public partial class App : Application
                     _window.SetAcrylic(_appSettings.PanelAcrylic); break;
                 case nameof(SettingsViewModel.HideOnFocusLoss):
                     _window.HideOnFocusLoss = _appSettings.HideOnFocusLoss; break;
+                case nameof(SettingsViewModel.AlwaysOnTop):
+                    _window.SetAlwaysOnTop(_appSettings.AlwaysOnTop); break;
+                case nameof(SettingsViewModel.PanelWidth):
+                case nameof(SettingsViewModel.PanelHeight):
+                    _window.SetPanelSize(_appSettings.PanelWidth, _appSettings.PanelHeight); break;
             }
         };
 

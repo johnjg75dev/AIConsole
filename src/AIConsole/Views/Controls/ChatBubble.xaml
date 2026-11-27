@@ -21,8 +21,8 @@
 
             <Border.ContextMenu>
                 <ContextMenu>
-                    <MenuItem Header="Copy" Command="{Binding CopyCommand}" Icon="&#xE8C8;"/>
-                    <MenuItem Header="Remove from history" Command="{Binding RemoveCommand}" Icon="&#xE74D;"/>
+                    <MenuItem Header="Copy" Command="{Binding CopyCommand}" Icon="&#x29C9;"/>
+                    <MenuItem Header="Remove from history" Command="{Binding RemoveCommand}" Icon="&#x2715;"/>
                 </ContextMenu>
             </Border.ContextMenu>
         </Border>
@@ -36,9 +36,9 @@
 
             <StackPanel x:Name="Actions" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Left"
                         VerticalAlignment="Center" Opacity="0">
-                <Button Style="{DynamicResource IconButton}" Content="&#xE8C8;" FontSize="12" Padding="5"
+                <Button Style="{DynamicResource IconButton}" Content="&#x29C9;" FontSize="12" Padding="5"
                         Command="{Binding CopyCommand}" ToolTip="Copy"/>
-                <Button Style="{DynamicResource IconButton}" Content="&#xE74D;" FontSize="12" Padding="5"
+                <Button Style="{DynamicResource IconButton}" Content="&#x2715;" FontSize="12" Padding="5"
                         Command="{Binding RemoveCommand}" ToolTip="Remove from history"/>
             </StackPanel>
 

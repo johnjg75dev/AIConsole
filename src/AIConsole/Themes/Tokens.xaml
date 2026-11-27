@@ -1,19 +1,15 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <!-- ── geometry ── -->
+    <!-- ── geometry / fonts ── -->
     <CornerRadius x:Key="RadiusPanel">14</CornerRadius>
     <CornerRadius x:Key="RadiusCard">12</CornerRadius>
     <CornerRadius x:Key="RadiusControl">8</CornerRadius>
     <CornerRadius x:Key="RadiusPill">999</CornerRadius>
     <CornerRadius x:Key="RadiusBubble">16</CornerRadius>
-    <sys:Double xmlns:sys="clr-namespace:System;assembly=System.Runtime" x:Key="FontBody">13.5</sys:Double>
-    <sys:Double xmlns:sys="clr-namespace:System;assembly=System.Runtime" x:Key="FontSmall">11.5</sys:Double>
-    <sys:Double xmlns:sys="clr-namespace:System;assembly=System.Runtime" x:Key="FontTitle">15</sys:Double>
-    <sys:Double xmlns:sys="clr-namespace:System;assembly=System.Runtime" x:Key="FontCode">12.5</sys:Double>
-    <FontFamily x:Key="FontUi">Segoe UI Variable Text, Segoe UI, Segoe UI Emoji</FontFamily>
+    <FontFamily x:Key="FontUi">Segoe UI Variable Text, Segoe UI, Segoe UI Emoji, Segoe UI Symbol</FontFamily>
     <FontFamily x:Key="FontMono">Cascadia Code, Consolas, Courier New</FontFamily>
-    <FontFamily x:Key="FontGlyph">Segoe Fluent Icons, Segoe MDL2 Assets, Segoe UI Symbol</FontFamily>
+    <FontFamily x:Key="FontGlyph">Segoe MDL2 Assets, Segoe Fluent Icons, Segoe UI Symbol, Segoe UI</FontFamily>
 
     <!-- ── scrollbars: thin rounded ── -->
     <Style TargetType="{x:Type ScrollBar}">
@@ -24,29 +20,13 @@
                 <ControlTemplate TargetType="{x:Type ScrollBar}">
                     <Grid Name="GridRoot" Background="Transparent">
                         <Track Name="PART_Track" IsDirectionReversed="true">
-                            <Track.DecreaseRepeatButton>
-                                <RepeatButton Command="ScrollBar.PageUpCommand" IsHitTestVisible="false" Opacity="0"/>
-                            </Track.DecreaseRepeatButton>
-                            <Track.IncreaseRepeatButton>
-                                <RepeatButton Command="ScrollBar.PageDownCommand" IsHitTestVisible="false" Opacity="0"/>
-                            </Track.IncreaseRepeatButton>
-                            <Track.Thumb>
-                                <Thumb>
-                                    <Thumb.Template>
-                                        <ControlTemplate TargetType="{x:Type Thumb}">
-                                            <Border CornerRadius="5" Background="{DynamicResource BorderBrush}" Opacity="0.8" Margin="2,4"/>
-                                        </ControlTemplate>
-                                    </Thumb.Template>
-                                </Thumb>
-                            </Track.Thumb>
+                            <Track.DecreaseRepeatButton><RepeatButton Command="ScrollBar.PageUpCommand" IsHitTestVisible="false" Opacity="0"/></Track.DecreaseRepeatButton>
+                            <Track.IncreaseRepeatButton><RepeatButton Command="ScrollBar.PageDownCommand" IsHitTestVisible="false" Opacity="0"/></Track.IncreaseRepeatButton>
+                            <Track.Thumb><Thumb><Thumb.Template><ControlTemplate TargetType="{x:Type Thumb}"><Border CornerRadius="5" Background="{DynamicResource BorderBrush}" Opacity="0.8" Margin="2,4"/></ControlTemplate></Thumb.Template></Thumb></Track.Thumb>
                         </Track>
                     </Grid>
                     <ControlTemplate.Triggers>
-                        <Trigger Property="Orientation" Value="Horizontal">
-                            <Setter TargetName="GridRoot" Property="Height" Value="10"/>
-                            <Setter Property="Width" Value="Auto"/>
-                            <Setter TargetName="PART_Track" Property="Grid.Row" Value="1"/>
-                        </Trigger>
+                        <Trigger Property="Orientation" Value="Horizontal"><Setter TargetName="GridRoot" Property="Height" Value="10"/><Setter Property="Width" Value="Auto"/></Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
@@ -65,21 +45,6 @@
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="CaretBrush" Value="{DynamicResource AccentBrush}"/>
         <Setter Property="Padding" Value="9,7"/>
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="{x:Type TextBox}">
-                    <Border Name="bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="8" SnapsToDevicePixels="true">
-                        <ScrollViewer Name="PART_ContentHost" Margin="{TemplateBinding Padding}" Focusable="false"
-                                      HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"/>
-                    </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsEnabled" Value="False"><Setter TargetName="bd" Property="Opacity" Value="0.55"/></Trigger>
-                        <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
     </Style>
     <Style TargetType="{x:Type PasswordBox}">
         <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}"/>
@@ -89,19 +54,43 @@
         <Setter Property="CaretBrush" Value="{DynamicResource AccentBrush}"/>
         <Setter Property="Padding" Value="9,7"/>
     </Style>
+
+    <!-- ── ComboBox (default template; just colors + items) ── -->
     <Style TargetType="{x:Type ComboBox}">
         <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}"/>
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
         <Setter Property="Padding" Value="8,6"/>
     </Style>
+    <Style TargetType="{x:Type ComboBoxItem}">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="Padding" Value="8,6"/>
+    </Style>
+
+    <!-- ── CheckBox / ToggleButton / Hyperlink ── -->
     <Style TargetType="{x:Type CheckBox}">
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
         <Setter Property="Padding" Value="4,0,0,0"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
     </Style>
-    <Style TargetType="{x:Type Hyperlink}">
-        <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+    <Style TargetType="{x:Type ToggleButton}">
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style TargetType="{x:Type Hyperlink}"><Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/></Style>
+
+    <!-- ── ContextMenu / MenuItem (default templates; colors only) ── -->
+    <Style TargetType="{x:Type ContextMenu}">
+        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+    </Style>
+    <Style TargetType="{x:Type MenuItem}">
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Padding" Value="10,6"/>
     </Style>
 
     <!-- ── buttons ── -->
@@ -115,8 +104,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type Button}">
-                    <Border Name="bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="9" Padding="{TemplateBinding Padding}">
+                    <Border Name="bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="9" Padding="{TemplateBinding Padding}">
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     <ControlTemplate.Triggers>
@@ -164,10 +152,7 @@
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="bd" Property="Background" Value="{DynamicResource SurfaceHoverBrush}"/>
-                            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
-                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="bd" Property="Background" Value="{DynamicResource SurfaceHoverBrush}"/><Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/></Trigger>
                         <Trigger Property="IsPressed" Value="True"><Setter TargetName="bd" Property="Opacity" Value="0.7"/></Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -175,6 +160,5 @@
         </Setter>
     </Style>
 
-    <!-- ── default styles for plain Button/ToggleButton so nothing looks like Win95 ── -->
     <Style TargetType="{x:Type Button}" BasedOn="{StaticResource FluentButton}"/>
 </ResourceDictionary>

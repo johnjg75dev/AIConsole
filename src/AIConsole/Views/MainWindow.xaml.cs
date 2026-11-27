@@ -22,6 +22,9 @@ public partial class MainWindow : Window
 
     private readonly TranslateTransform _slide;
     private SlideEdge _edge = SlideEdge.Top;
+    private double _customWidth;
+    private double _panelHeight = 600;
+    private bool _alwaysOnTop = true;
     private bool _acrylic = true;
     private bool _visible;
     private HwndSource? _source;
@@ -50,6 +53,11 @@ public partial class MainWindow : Window
 
     public void SetSlideEdge(SlideEdge edge) => _edge = edge;
     public void SetAcrylic(bool on) { _acrylic = on; ApplyAcrylic(); }
+    public void SetAlwaysOnTop(bool on) { _alwaysOnTop = on; Topmost = on; }
+    public void SetPanelSize(double width, double height)
+    {
+        _customWidth = width; _panelHeight = height <= 0 ? 600 : height; ApplySize();
+    }
 
     private void ApplyAcrylic()
     {
@@ -74,7 +82,7 @@ public partial class MainWindow : Window
         Visibility = Visibility.Visible;
         Show();
         Activate();
-        Topmost = true;
+        Topmost = _alwaysOnTop;
 
         var from = _edge switch
         {
@@ -140,14 +148,24 @@ public partial class MainWindow : Window
 
     public void TogglePanel() { if (_visible) HidePanel(); else ShowPanel(); }
 
+    private void ApplySize()
+    {
+        var work = SystemParameters.WorkArea;
+        Height = _panelHeight;
+        if (_edge == SlideEdge.Top)
+            Width = _customWidth > 0 ? _customWidth : work.Width;   // full screen width by default
+        else Width = _customWidth > 0 ? _customWidth : 880;
+    }
+
     private void PositionWindow()
     {
+        ApplySize();
         var work = SystemParameters.WorkArea;
         switch (_edge)
         {
             case SlideEdge.Top:
-                Left = work.Left + (work.Width - Width) / 2;
-                Top = work.Top + 4;
+                Left = _customWidth > 0 ? work.Left + (work.Width - Width) / 2 : work.Left;
+                Top = work.Top;
                 break;
             case SlideEdge.Left:
                 Left = work.Left;

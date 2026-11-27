@@ -6,178 +6,172 @@
              mc:Ignorable="d" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008">
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="18,10,18,20">
-        <StackPanel MaxWidth="680" HorizontalAlignment="Stretch">
+    <Grid Background="Transparent">
+        <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
 
-            <TextBlock Text="Settings" FontSize="22" FontWeight="Bold" Margin="0,4,0,16"/>
+        <TabControl Grid.Row="0" BorderThickness="0" Background="Transparent" Padding="0" Margin="14,8,14,4">
+            <TabControl.Resources>
+                <Style TargetType="{x:Type TabItem}">
+                    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                    <Setter Property="Padding" Value="12,7"/>
+                    <Setter Property="Cursor" Value="Hand"/>
+                </Style>
+            </TabControl.Resources>
 
-            <!-- ============== MODELS & ENDPOINTS ============== -->
-            <TextBlock Text="MODELS &amp; ENDPOINTS" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" Margin="0,0,0,8"/>
+            <!-- ================= MODELS & ENDPOINTS ================= -->
+            <TabItem Header="Models &amp; Endpoints">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="4,12,4,4">
+                    <StackPanel>
+                        <ItemsControl ItemsSource="{Binding Endpoints}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{DynamicResource SurfaceAltBrush}" BorderBrush="{DynamicResource BorderBrush}"
+                                            BorderThickness="1" CornerRadius="12" Padding="14" Margin="0,0,0,12">
+                                        <StackPanel>
+                                            <Grid Margin="0,0,0,8">
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                                <TextBox Grid.Column="0" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" FontWeight="SemiBold" FontSize="13.5" ToolTip="Endpoint name"/>
+                                                <Button Grid.Column="1" Style="{DynamicResource IconButton}" Content="&#x2715;" FontSize="14" ToolTip="Remove endpoint"
+                                                        Command="{Binding DataContext.DeleteEndpointCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
+                                            </Grid>
+                                            <TextBlock Text="Base URL" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,2"/>
+                                            <TextBox Text="{Binding BaseUrl, UpdateSourceTrigger=PropertyChanged}" FontSize="12.5" ToolTip="e.g. https://api.openai.com/v1 or http://localhost:11434/v1"/>
+                                            <TextBlock Text="API key (optional)" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,8,0,2"/>
+                                            <PasswordBox FontSize="12.5" converters:PasswordBoxBinding.Password="{Binding ApiKey, UpdateSourceTrigger=PropertyChanged}" ToolTip="Stored encrypted (Windows DPAPI). Leave empty for no auth."/>
+                                            <Grid Margin="0,10,0,4">
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                                <Button Grid.Column="0" Style="{DynamicResource FluentButton}" Content="Fetch models" Padding="10,6" FontSize="12"
+                                                        Command="{Binding DataContext.FetchModelsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
+                                                <CheckBox Grid.Column="1" Content="Always show all models (auto-refresh)" IsChecked="{Binding ShowAllModels, UpdateSourceTrigger=PropertyChanged}" FontSize="12" Margin="12,0,0,0"/>
+                                                <TextBlock Grid.Column="2" Text="{Binding FetchStatus}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                                            </Grid>
+                                            <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="8" Margin="0,4,0,8">
+                                                <StackPanel>
+                                                    <CheckBox Content="Select all" IsThreeState="True" IsChecked="{Binding AllSelected, Mode=OneWay}" FontWeight="SemiBold" FontSize="12" Margin="0,0,0,4"
+                                                              Command="{Binding DataContext.SelectAllCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
+                                                    <ScrollViewer MaxHeight="170" VerticalScrollBarVisibility="Auto">
+                                                        <ItemsControl ItemsSource="{Binding Models}">
+                                                            <ItemsControl.ItemTemplate>
+                                                                <DataTemplate><CheckBox Content="{Binding ModelId}" IsChecked="{Binding IsEnabled, UpdateSourceTrigger=PropertyChanged}" FontSize="12" FontFamily="Cascadia Code, Consolas" Margin="14,1,0,1"/></DataTemplate>
+                                                            </ItemsControl.ItemTemplate>
+                                                        </ItemsControl>
+                                                    </ScrollViewer>
+                                                </StackPanel>
+                                            </Border>
+                                            <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                                <Button Grid.Column="1" Style="{DynamicResource AccentButton}" Content="Save &amp; fetch" Padding="12,7" FontSize="12.5"
+                                                        Command="{Binding DataContext.SaveEndpointCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
+                                            </Grid>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Button Style="{DynamicResource FluentButton}" Content="+  Add endpoint" Command="{Binding AddEndpointCommand}" HorizontalAlignment="Left" Padding="12,8"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
 
-            <ItemsControl ItemsSource="{Binding Endpoints}">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <Border Background="{DynamicResource SurfaceAltBrush}" BorderBrush="{DynamicResource BorderBrush}"
-                                BorderThickness="1" CornerRadius="12" Padding="14" Margin="0,0,0,12">
-                            <StackPanel>
-                                <Grid Margin="0,0,0,8">
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                    <TextBox Grid.Column="0" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" FontWeight="SemiBold"
-                                             ToolTip="Endpoint name" FontSize="13.5"/>
-                                    <Button Grid.Column="1" Style="{DynamicResource IconButton}" Content="&#xE74D;" FontSize="14"
-                                            ToolTip="Remove endpoint"
-                                            Command="{Binding DataContext.DeleteEndpointCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                            CommandParameter="{Binding}"/>
-                                </Grid>
+            <!-- ================= IMPORT ================= -->
+            <TabItem Header="Import">
+                <StackPanel Margin="4,12,4,4">
+                    <TextBlock Text="Import OpenAI-compatible endpoints from OpenCode, Continue, Zed, or a JSON file. Local servers (Ollama, LM Studio, ...) can be auto-detected." FontSize="11.5" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <Button Style="{DynamicResource FluentButton}" Content="Scan installed tools" Padding="10,6" FontSize="12" Margin="0,0,8,0" Command="{Binding ScanImportsCommand}"/>
+                        <Button Style="{DynamicResource FluentButton}" Content="Detect local servers" Padding="10,6" FontSize="12" Margin="0,0,8,0" Command="{Binding DetectLocalServersCommand}"/>
+                        <Button Style="{DynamicResource FluentButton}" Content="Import file..." Padding="10,6" FontSize="12" Click="ImportFromFile_Click"/>
+                    </StackPanel>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding Imports}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,3"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="12.5" TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis"><Run Text="{Binding BaseUrl}"/><Run Text=" · "/><Run Text="{Binding Source}"/></TextBlock>
+                                        </StackPanel>
+                                        <Button Grid.Column="1" Style="{DynamicResource AccentButton}" Content="Import" Padding="10,6" FontSize="12"
+                                                Command="{Binding DataContext.ImportEndpointCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                    <TextBlock Text="{Binding StatusText}" FontSize="11.5" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                </StackPanel>
+            </TabItem>
 
-                                <TextBlock Text="Base URL" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,2"/>
-                                <TextBox Text="{Binding BaseUrl, UpdateSourceTrigger=PropertyChanged}" FontSize="12.5"
-                                         ToolTip="e.g. https://api.openai.com/v1 or http://localhost:11434/v1"/>
-
-                                <TextBlock Text="API key (optional)" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,8,0,2"/>
-                                <PasswordBox x:Name="KeyBox" FontSize="12.5" converters:PasswordBoxBinding.Password="{Binding ApiKey, UpdateSourceTrigger=PropertyChanged}"
-                                             ToolTip="Stored encrypted (Windows DPAPI). Leave empty for no auth."/>
-
-                                <Grid Margin="0,10,0,4">
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                    <Button Grid.Column="0" Style="{DynamicResource FluentButton}" Content="Fetch models" Padding="10,6" FontSize="12"
-                                            Command="{Binding DataContext.FetchModelsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                            CommandParameter="{Binding}"/>
-                                    <CheckBox Grid.Column="1" Content="Always show all models from endpoint (auto-refresh)"
-                                              IsChecked="{Binding ShowAllModels, UpdateSourceTrigger=PropertyChanged}" FontSize="12" Margin="12,0,0,0"
-                                              ToolTip="Re-fetch the full model list periodically; new models appear automatically"/>
-                                    <TextBlock Grid.Column="2" Text="{Binding FetchStatus}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
-                                               VerticalAlignment="Center" Margin="10,0,0,0"/>
-                                </Grid>
-
-                                <!-- model checkboxes + select all -->
-                                <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}"
-                                        BorderThickness="1" CornerRadius="8" Padding="8" Margin="0,4,0,8">
-                                    <StackPanel>
-                                        <CheckBox Content="Select all" IsThreeState="True" IsChecked="{Binding AllSelected, Mode=OneWay}"
-                                                  FontWeight="SemiBold" FontSize="12" Margin="0,0,0,4"
-                                                  Command="{Binding DataContext.SelectAllCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                  CommandParameter="{Binding}"/>
-                                        <ScrollViewer MaxHeight="170" VerticalScrollBarVisibility="Auto">
-                                            <ItemsControl ItemsSource="{Binding Models}">
-                                                <ItemsControl.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <CheckBox Content="{Binding ModelId}" IsChecked="{Binding IsEnabled, UpdateSourceTrigger=PropertyChanged}"
-                                                                  FontSize="12" FontFamily="Cascadia Code, Consolas" Margin="14,1,0,1"/>
-                                                    </DataTemplate>
-                                                </ItemsControl.ItemTemplate>
-                                            </ItemsControl>
-                                        </ScrollViewer>
-                                    </StackPanel>
-                                </Border>
-
-                                <Grid>
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                    <Button Grid.Column="1" Style="{DynamicResource AccentButton}" Content="Save &amp; fetch" Padding="12,7" FontSize="12.5"
-                                            Command="{Binding DataContext.SaveEndpointCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                            CommandParameter="{Binding}"/>
-                                </Grid>
-                            </StackPanel>
-                        </Border>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-
-            <Button Style="{DynamicResource FluentButton}" Content="+  Add endpoint" Command="{Binding AddEndpointCommand}"
-                    HorizontalAlignment="Left" Padding="12,8"/>
-
-            <!-- ============== WINDOW & HOTKEY ============== -->
-            <TextBlock Text="WINDOW &amp; HOTKEY" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" Margin="0,20,0,8"/>
-            <Border Background="{DynamicResource SurfaceAltBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="14">
-                <StackPanel>
-                    <Grid Margin="0,0,0,8">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+            <!-- ================= WINDOW & HOTKEY ================= -->
+            <TabItem Header="Window &amp; Hotkey">
+                <StackPanel Margin="4,12,4,4">
+                    <Grid Margin="0,0,0,8"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="Global hotkey" FontSize="12.5" VerticalAlignment="Center" Margin="0,0,10,0"/>
                         <controls:HotkeyBox Grid.Column="1" x:Name="HotkeyCapture"/>
                     </Grid>
-                    <TextBlock Text="Click the box, then press a key combination." FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,10"/>
-
-                    <Grid Margin="0,0,0,8">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <TextBlock Text="Click the box, then press a key combination (needs a modifier)." FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,12"/>
+                    <Grid Margin="0,0,0,8"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="Slide in from" FontSize="12.5" VerticalAlignment="Center"/>
                         <ComboBox Grid.Column="1" ItemsSource="{Binding SlideEdges}" SelectedItem="{Binding SlideEdge}" Width="120" FontSize="12.5"/>
                     </Grid>
-                    <CheckBox Content="Hide panel when it loses focus" IsChecked="{Binding HideOnFocusLoss}" FontSize="12.5" Margin="0,2"/>
-                    <CheckBox Content="Acrylic / blurred backdrop" IsChecked="{Binding PanelAcrylic}" FontSize="12.5" Margin="0,2"/>
-                    <CheckBox Content="Start with Windows" IsChecked="{Binding StartWithWindows}" FontSize="12.5" Margin="0,2"/>
-                    <Grid Margin="0,8,0,0">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <CheckBox Content="Always on top" IsChecked="{Binding AlwaysOnTop}" FontSize="12.5" Margin="0,4"/>
+                    <CheckBox Content="Hide panel when it loses focus" IsChecked="{Binding HideOnFocusLoss}" FontSize="12.5" Margin="0,4"/>
+                    <CheckBox Content="Acrylic / blurred backdrop" IsChecked="{Binding PanelAcrylic}" FontSize="12.5" Margin="0,4"/>
+                    <CheckBox Content="Start with Windows" IsChecked="{Binding StartWithWindows}" FontSize="12.5" Margin="0,4"/>
+                    <Grid Margin="0,10,0,4"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Panel width (px, 0 = auto / full width)" FontSize="12.5" VerticalAlignment="Center"/>
+                        <TextBox Grid.Column="1" Text="{Binding PanelWidth, UpdateSourceTrigger=LostFocus}" Width="90" FontSize="12.5"/>
+                    </Grid>
+                    <Grid Margin="0,4,0,4"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Panel height (px)" FontSize="12.5" VerticalAlignment="Center"/>
+                        <TextBox Grid.Column="1" Text="{Binding PanelHeight, UpdateSourceTrigger=LostFocus}" Width="90" FontSize="12.5"/>
+                    </Grid>
+                    <Grid Margin="0,8,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="Refresh model lists every (minutes)" FontSize="12.5" VerticalAlignment="Center"/>
                         <TextBox Grid.Column="1" Text="{Binding RefreshMinutes, UpdateSourceTrigger=LostFocus}" Width="80" FontSize="12.5"/>
                     </Grid>
                 </StackPanel>
-            </Border>
+            </TabItem>
 
-            <!-- ============== IMPORT ============== -->
-            <TextBlock Text="IMPORT FROM OTHER TOOLS" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" Margin="0,20,0,8"/>
-            <Border Background="{DynamicResource SurfaceAltBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="14">
-                <StackPanel>
-                    <TextBlock Text="Import OpenAI-compatible endpoints from OpenCode, Continue, Zed, or a JSON file. Local servers (Ollama, LM Studio, ...) can be auto-detected."
-                               FontSize="11.5" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,10"/>
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                        <Button Style="{DynamicResource FluentButton}" Content="Scan installed tools" Padding="10,6" FontSize="12" Margin="0,0,8,0"
-                                Command="{Binding ScanImportsCommand}"/>
-                        <Button Style="{DynamicResource FluentButton}" Content="Detect local servers" Padding="10,6" FontSize="12" Margin="0,0,8,0"
-                                Command="{Binding DetectLocalServersCommand}"/>
-                        <Button Style="{DynamicResource FluentButton}" Content="Import file..." Padding="10,6" FontSize="12"
-                                Click="ImportFromFile_Click"/>
+            <!-- ================= APPEARANCE ================= -->
+            <TabItem Header="Appearance">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="4,12,4,4">
+                    <StackPanel>
+                        <CheckBox Content="Match Windows dark/light mode" IsChecked="{Binding FollowWindowsTheme}" FontSize="12.5" Margin="0,0,0,10"/>
+                        <TextBlock Text="Theme (applies live; reverts if you Cancel)" FontSize="12.5" Margin="0,0,0,6"/>
+                        <ComboBox ItemsSource="{Binding Themes}" SelectedItem="{Binding Theme}" Width="200" HorizontalAlignment="Left" FontSize="12.5" Margin="0,0,0,10"/>
+                        <TextBlock Text="Accent" FontSize="12.5" Margin="0,0,0,6"/>
+                        <ItemsControl ItemsSource="{Binding AccentSwatches}" Margin="0,0,0,6">
+                            <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate><DataTemplate>
+                                <Button Width="26" Height="26" Margin="0,0,8,8" Cursor="Hand" BorderThickness="1" Padding="0" BorderBrush="{DynamicResource BorderBrush}" Background="{Binding}" Tag="{Binding}" Click="Accent_Click"/>
+                            </DataTemplate></ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <CheckBox Content="Show line numbers in code blocks" IsChecked="{Binding ShowLineNumbers}" FontSize="12.5" Margin="0,6,0,8"/>
+                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Code font" FontSize="12.5" VerticalAlignment="Center"/>
+                            <ComboBox Grid.Column="1" ItemsSource="{Binding CodeFonts}" SelectedItem="{Binding CodeFont}" Width="170" FontSize="12.5"/>
+                        </Grid>
                     </StackPanel>
-                    <ItemsControl ItemsSource="{Binding Imports}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Grid Margin="0,3">
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                    <StackPanel Grid.Column="0">
-                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="12.5" TextTrimming="CharacterEllipsis"/>
-                                        <TextBlock FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis">
-                                            <Run Text="{Binding BaseUrl}"/><Run Text=" · "/><Run Text="{Binding Source}"/>
-                                        </TextBlock>
-                                    </StackPanel>
-                                    <Button Grid.Column="1" Style="{DynamicResource AccentButton}" Content="Import" Padding="10,6" FontSize="12"
-                                            Command="{Binding DataContext.ImportEndpointCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                            CommandParameter="{Binding}"/>
-                                </Grid>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- ================= NOTIFICATIONS ================= -->
+            <TabItem Header="Notifications">
+                <StackPanel Margin="4,12,4,4">
+                    <CheckBox Content="Show a Windows notification when a reply is completed" IsChecked="{Binding NotifyOnCompletion}" FontSize="12.5"/>
+                    <TextBlock Text="Uses the Windows notification area (tray)." FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,6,0,0"/>
                 </StackPanel>
-            </Border>
+            </TabItem>
+        </TabControl>
 
-            <!-- ============== APPEARANCE ============== -->
-            <TextBlock Text="APPEARANCE" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" Margin="0,20,0,8"/>
-            <Border Background="{DynamicResource SurfaceAltBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="14">
-                <StackPanel>
-                    <CheckBox Content="Match Windows dark/light mode" IsChecked="{Binding FollowWindowsTheme}" FontSize="12.5" Margin="0,0,0,10"/>
-
-                    <TextBlock Text="Theme" FontSize="12.5" Margin="0,0,0,6"/>
-                    <ComboBox ItemsSource="{Binding Themes}" SelectedItem="{Binding Theme}" Width="180" HorizontalAlignment="Left" FontSize="12.5" Margin="0,0,0,10"/>
-
-                    <TextBlock Text="Accent" FontSize="12.5" Margin="0,0,0,6"/>
-                    <ItemsControl ItemsSource="{Binding AccentSwatches}" Margin="0,0,0,6">
-                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Button Width="26" Height="26" Margin="0,0,8,8" Cursor="Hand" BorderThickness="1" Padding="0"
-                                        BorderBrush="{DynamicResource BorderBrush}" Tag="{Binding}" Click="Accent_Click"
-                                        Background="{Binding}"/>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-
-                    <CheckBox Content="Show line numbers in code blocks" IsChecked="{Binding ShowLineNumbers}" FontSize="12.5" Margin="0,6,0,8"/>
-                    <Grid>
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Code font" FontSize="12.5" VerticalAlignment="Center"/>
-                        <ComboBox Grid.Column="1" ItemsSource="{Binding CodeFonts}" SelectedItem="{Binding CodeFont}" Width="160" FontSize="12.5"/>
-                    </Grid>
-                </StackPanel>
-            </Border>
-
-        </StackPanel>
-    </ScrollViewer>
+        <!-- ================= APPLY / CANCEL ================= -->
+        <Border Grid.Row="1" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Background="{DynamicResource SurfaceAltBrush}" Padding="14,10">
+            <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="{Binding StatusText}" FontSize="11.5" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                <Button Grid.Column="1" Style="{DynamicResource FluentButton}" Content="Cancel" Command="{Binding CancelCommand}" Padding="14,8" Margin="0,0,8,0"/>
+                <Button Grid.Column="2" Style="{DynamicResource AccentButton}" Content="Apply" Command="{Binding ApplyCommand}" Padding="16,8" FontWeight="SemiBold"/>
+            </Grid>
+        </Border>
+    </Grid>
 </UserControl>

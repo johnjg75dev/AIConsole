@@ -59,6 +59,10 @@ public sealed class AppSettings
     public string Hotkey { get; set; } = "Ctrl+`";
     public bool StartWithWindows { get; set; }
     public bool PanelAcrylic { get; set; } = true;
+    public bool AlwaysOnTop { get; set; } = true;      // popup stays above other windows
+    public double PanelWidth { get; set; }             // 0 = auto; Top slide defaults to full screen width
+    public double PanelHeight { get; set; } = 600;     // panel height (px)
+    public bool NotifyOnCompletion { get; set; } = true; // Windows notification when a reply finishes
 
     // Model refresh
     public int RefreshMinutes { get; set; } = 360; // 6 hours
