@@ -119,161 +119,185 @@
             <!-- ================= WINDOW & HOTKEY ================= -->
             <TabItem Header="Window &amp; Hotkey">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="4,12,4,4">
-                    <StackPanel MaxWidth="760" HorizontalAlignment="Left">
-                        <TextBlock Text="BEHAVIOR" Style="{StaticResource FormSection}"/>
+                    <Grid MaxWidth="1080" HorizontalAlignment="Left">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="28"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
 
-                        <Grid Margin="0,0,0,10">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="250"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="Global hotkey" Style="{StaticResource FormLabel}"/>
-                                <TextBlock Text="Click the box, then press a key combination (needs a modifier)." Style="{StaticResource FormHelp}"/>
-                            </StackPanel>
-                            <controls:HotkeyBox Grid.Column="1" x:Name="HotkeyCapture" HorizontalAlignment="Left" Width="240"/>
-                        </Grid>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="BEHAVIOR" Style="{StaticResource FormSection}"/>
 
-                        <Grid Margin="0,0,0,10">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="250"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="Slide in from" Style="{StaticResource FormLabel}"/>
-                            <ComboBox Grid.Column="1" ItemsSource="{Binding SlideEdges}" SelectedItem="{Binding SlideEdge}" Width="160" HorizontalAlignment="Left" FontSize="12.5"/>
-                        </Grid>
-
-                        <Grid Margin="0,0,0,10">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="250"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="Always on top" Style="{StaticResource FormLabel}"/>
-                                <TextBlock Text="Keeps the panel above other windows." Style="{StaticResource FormHelp}"/>
-                            </StackPanel>
-                            <CheckBox Grid.Column="1" IsChecked="{Binding AlwaysOnTop}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                        </Grid>
-
-                        <Grid Margin="0,0,0,10">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="250"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="Hide when focus is lost" Style="{StaticResource FormLabel}"/>
-                                <TextBlock Text="When off, use Esc, the hotkey, or the close button to hide the panel." Style="{StaticResource FormHelp}"/>
-                            </StackPanel>
-                            <CheckBox Grid.Column="1" IsChecked="{Binding HideOnFocusLoss}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                        </Grid>
-
-                        <Grid Margin="0,0,0,10">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="250"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="Acrylic / blurred backdrop" Style="{StaticResource FormLabel}"/>
-                                <TextBlock Text="Uses the Windows transparent backdrop when available." Style="{StaticResource FormHelp}"/>
-                            </StackPanel>
-                            <CheckBox Grid.Column="1" IsChecked="{Binding PanelAcrylic}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                        </Grid>
-
-                        <Grid Margin="0,0,0,10">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="250"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="Start with Windows" Style="{StaticResource FormLabel}"/>
-                                <TextBlock Text="Launch AIConsole when you sign in." Style="{StaticResource FormHelp}"/>
-                            </StackPanel>
-                            <CheckBox Grid.Column="1" IsChecked="{Binding StartWithWindows}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                        </Grid>
-
-                        <TextBlock Text="LAYOUT" Style="{StaticResource FormSection}"/>
-
-                        <Grid Margin="0,0,0,10">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="250"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="Panel width" Style="{StaticResource FormLabel}"/>
-                                <TextBlock Text="Pixels; 0 = auto (full width when sliding from the top)." Style="{StaticResource FormHelp}"/>
-                            </StackPanel>
-                            <TextBox Grid.Column="1" Text="{Binding PanelWidth, UpdateSourceTrigger=LostFocus}" Width="110" HorizontalAlignment="Left" FontSize="12.5"/>
-                        </Grid>
-
-                        <Grid Margin="0,0,0,10">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="250"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="Panel height" Style="{StaticResource FormLabel}"/>
-                                <TextBlock Text="Pixels." Style="{StaticResource FormHelp}"/>
-                            </StackPanel>
-                            <TextBox Grid.Column="1" Text="{Binding PanelHeight, UpdateSourceTrigger=LostFocus}" Width="110" HorizontalAlignment="Left" FontSize="12.5"/>
-                        </Grid>
-
-                        <Grid Margin="0,0,0,10">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="250"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="Panel opacity" Style="{StaticResource FormLabel}"/>
-                                <TextBlock Text="Lower values let you see the desktop through the panel background." Style="{StaticResource FormHelp}"/>
-                            </StackPanel>
-                            <Grid Grid.Column="1">
-                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                <Slider Minimum="0.3" Maximum="1" SmallChange="0.05" LargeChange="0.1"
-                                        Value="{Binding PanelOpacity}" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                                <TextBlock Grid.Column="1" Text="{Binding PanelOpacity, StringFormat={}{0:P0}}" Width="42"
-                                           TextAlignment="Right" VerticalAlignment="Center" FontSize="12.5"/>
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="200"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Global hotkey" Style="{StaticResource FormLabel}"/>
+                                    <TextBlock Text="Click the box, then press a key combination (needs a modifier)." Style="{StaticResource FormHelp}"/>
+                                </StackPanel>
+                                <controls:HotkeyBox Grid.Column="1" x:Name="HotkeyCapture" HorizontalAlignment="Left" Width="220"/>
                             </Grid>
-                        </Grid>
 
-                        <Grid Margin="0,0,0,10">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="250"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="Refresh model lists" Style="{StaticResource FormLabel}"/>
-                                <TextBlock Text="Minutes between automatic model refreshes." Style="{StaticResource FormHelp}"/>
-                            </StackPanel>
-                            <TextBox Grid.Column="1" Text="{Binding RefreshMinutes, UpdateSourceTrigger=LostFocus}" Width="90" HorizontalAlignment="Left" FontSize="12.5"/>
-                        </Grid>
-                    </StackPanel>
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="200"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Slide in from" Style="{StaticResource FormLabel}"/>
+                                <ComboBox Grid.Column="1" ItemsSource="{Binding SlideEdges}" SelectedItem="{Binding SlideEdge}" Width="150" HorizontalAlignment="Left" FontSize="12.5"/>
+                            </Grid>
+
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="200"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Always on top" Style="{StaticResource FormLabel}"/>
+                                    <TextBlock Text="Keeps the panel above other windows." Style="{StaticResource FormHelp}"/>
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" IsChecked="{Binding AlwaysOnTop}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                            </Grid>
+
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="200"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Hide when focus is lost" Style="{StaticResource FormLabel}"/>
+                                    <TextBlock Text="When off, use Esc, the hotkey, or the close button to hide the panel." Style="{StaticResource FormHelp}"/>
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" IsChecked="{Binding HideOnFocusLoss}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                            </Grid>
+
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="200"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Acrylic / blurred backdrop" Style="{StaticResource FormLabel}"/>
+                                    <TextBlock Text="Uses the Windows transparent backdrop when available." Style="{StaticResource FormHelp}"/>
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" IsChecked="{Binding PanelAcrylic}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                            </Grid>
+
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="200"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Start with Windows" Style="{StaticResource FormLabel}"/>
+                                    <TextBlock Text="Launch AIConsole when you sign in." Style="{StaticResource FormHelp}"/>
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" IsChecked="{Binding StartWithWindows}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                            </Grid>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="LAYOUT" Style="{StaticResource FormSection}"/>
+
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="200"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Panel width" Style="{StaticResource FormLabel}"/>
+                                    <TextBlock Text="Pixels; 0 = auto (full width when sliding from the top)." Style="{StaticResource FormHelp}"/>
+                                </StackPanel>
+                                <TextBox Grid.Column="1" Text="{Binding PanelWidth, UpdateSourceTrigger=LostFocus}" Width="110" HorizontalAlignment="Left" FontSize="12.5"/>
+                            </Grid>
+
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="200"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Panel height" Style="{StaticResource FormLabel}"/>
+                                    <TextBlock Text="Pixels." Style="{StaticResource FormHelp}"/>
+                                </StackPanel>
+                                <TextBox Grid.Column="1" Text="{Binding PanelHeight, UpdateSourceTrigger=LostFocus}" Width="110" HorizontalAlignment="Left" FontSize="12.5"/>
+                            </Grid>
+
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="200"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Panel opacity" Style="{StaticResource FormLabel}"/>
+                                    <TextBlock Text="Lower values let you see the desktop through the panel background." Style="{StaticResource FormHelp}"/>
+                                </StackPanel>
+                                <Grid Grid.Column="1">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <Slider Minimum="0.3" Maximum="1" SmallChange="0.05" LargeChange="0.1"
+                                            Value="{Binding PanelOpacity}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding PanelOpacity, StringFormat={}{0:P0}}" Width="42"
+                                               TextAlignment="Right" VerticalAlignment="Center" FontSize="12.5"/>
+                                </Grid>
+                            </Grid>
+
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="200"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Refresh model lists" Style="{StaticResource FormLabel}"/>
+                                    <TextBlock Text="Minutes between automatic model refreshes." Style="{StaticResource FormHelp}"/>
+                                </StackPanel>
+                                <TextBox Grid.Column="1" Text="{Binding RefreshMinutes, UpdateSourceTrigger=LostFocus}" Width="90" HorizontalAlignment="Left" FontSize="12.5"/>
+                            </Grid>
+                        </StackPanel>
+                    </Grid>
                 </ScrollViewer>
             </TabItem>
 
             <!-- ================= APPEARANCE ================= -->
             <TabItem Header="Appearance">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="4,12,4,4">
-                    <StackPanel MaxWidth="760" HorizontalAlignment="Left">
-                        <Grid Margin="0,0,0,10">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="250"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="Match Windows theme" Style="{StaticResource FormLabel}"/>
-                                <TextBlock Text="Follow the system light/dark mode instead of the selected theme." Style="{StaticResource FormHelp}"/>
-                            </StackPanel>
-                            <CheckBox Grid.Column="1" IsChecked="{Binding FollowWindowsTheme}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                        </Grid>
+                    <Grid MaxWidth="1080" HorizontalAlignment="Left">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="28"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
 
-                        <Grid Margin="0,0,0,10">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="250"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="Theme" Style="{StaticResource FormLabel}"/>
-                                <TextBlock Text="Applies live; reverts if you Cancel." Style="{StaticResource FormHelp}"/>
-                            </StackPanel>
-                            <ComboBox Grid.Column="1" ItemsSource="{Binding Themes}" SelectedItem="{Binding Theme, Mode=TwoWay}"
-                                      Width="200" HorizontalAlignment="Left" FontSize="12.5"
-                                      SelectionChanged="Theme_SelectionChanged"/>
-                        </Grid>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="THEME" Style="{StaticResource FormSection}"/>
 
-                        <Grid Margin="0,0,0,10">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="250"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="Accent color" Style="{StaticResource FormLabel}"/>
-                                <TextBlock Text="Click a swatch to recolor buttons and highlights." Style="{StaticResource FormHelp}"/>
-                            </StackPanel>
-                            <ItemsControl Grid.Column="1" ItemsSource="{Binding AccentSwatches}">
-                                <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate><DataTemplate>
-                                    <Button Width="26" Height="26" Margin="0,0,8,8" Cursor="Hand" BorderThickness="1" Padding="0" BorderBrush="{DynamicResource BorderBrush}" Background="{Binding}" Tag="{Binding}" Click="Accent_Click"/>
-                                </DataTemplate></ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </Grid>
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="200"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Match Windows theme" Style="{StaticResource FormLabel}"/>
+                                    <TextBlock Text="Follow the system light/dark mode instead of the selected theme." Style="{StaticResource FormHelp}"/>
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" IsChecked="{Binding FollowWindowsTheme}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                            </Grid>
 
-                        <Grid Margin="0,0,0,10">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="250"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="Code line numbers" Style="{StaticResource FormLabel}"/>
-                                <TextBlock Text="Show a gutter in Markdown code blocks." Style="{StaticResource FormHelp}"/>
-                            </StackPanel>
-                            <CheckBox Grid.Column="1" IsChecked="{Binding ShowLineNumbers}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                        </Grid>
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="200"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Theme" Style="{StaticResource FormLabel}"/>
+                                    <TextBlock Text="Applies live; reverts if you Cancel." Style="{StaticResource FormHelp}"/>
+                                </StackPanel>
+                                <ComboBox Grid.Column="1" ItemsSource="{Binding Themes}" SelectedItem="{Binding Theme, Mode=TwoWay}"
+                                          Width="190" HorizontalAlignment="Left" FontSize="12.5"
+                                          SelectionChanged="Theme_SelectionChanged"/>
+                            </Grid>
 
-                        <Grid Margin="0,0,0,10">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="250"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="Code font" Style="{StaticResource FormLabel}"/>
-                            <ComboBox Grid.Column="1" ItemsSource="{Binding CodeFonts}" SelectedItem="{Binding CodeFont}"
-                                      Width="190" HorizontalAlignment="Left" FontSize="12.5"/>
-                        </Grid>
-                    </StackPanel>
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="200"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Accent color" Style="{StaticResource FormLabel}"/>
+                                    <TextBlock Text="Click a swatch to recolor buttons and highlights." Style="{StaticResource FormHelp}"/>
+                                </StackPanel>
+                                <ItemsControl Grid.Column="1" ItemsSource="{Binding AccentSwatches}">
+                                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate><DataTemplate>
+                                        <Button Width="26" Height="26" Margin="0,0,8,8" Cursor="Hand" BorderThickness="1" Padding="0" BorderBrush="{DynamicResource BorderBrush}" Background="{Binding}" Tag="{Binding}" Click="Accent_Click"/>
+                                    </DataTemplate></ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Grid>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="CODE" Style="{StaticResource FormSection}"/>
+
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="200"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Code line numbers" Style="{StaticResource FormLabel}"/>
+                                    <TextBlock Text="Show a gutter in Markdown code blocks." Style="{StaticResource FormHelp}"/>
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" IsChecked="{Binding ShowLineNumbers}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                            </Grid>
+
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="200"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Code font" Style="{StaticResource FormLabel}"/>
+                                <ComboBox Grid.Column="1" ItemsSource="{Binding CodeFonts}" SelectedItem="{Binding CodeFont}"
+                                          Width="180" HorizontalAlignment="Left" FontSize="12.5"/>
+                            </Grid>
+                        </StackPanel>
+                    </Grid>
                 </ScrollViewer>
             </TabItem>
 
