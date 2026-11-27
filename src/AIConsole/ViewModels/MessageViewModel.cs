@@ -21,6 +21,7 @@ public partial class MessageViewModel : ObservableObject
 
     [ObservableProperty] private string _rawMarkdown = "";
     [ObservableProperty] private bool _isStreaming;
+    [ObservableProperty] private bool _isAwaitingFirstToken;
     [ObservableProperty] private FrameworkElement? _rendered;
     [ObservableProperty] private bool _isEditing;
     [ObservableProperty] private string _editText = "";
@@ -61,12 +62,23 @@ public partial class MessageViewModel : ObservableObject
 
     partial void OnRawMarkdownChanged(string value)
     {
+        // The typing indicator stays up until real content exists. Render that first
+        // content immediately so the bubble never blinks to an empty state.
+        if (IsAwaitingFirstToken && value.Length > 0)
+        {
+            IsAwaitingFirstToken = false;
+            RenderMarkdown();
+            return;
+        }
+
         if (IsStreaming) ScheduleLiveRender();
     }
 
     partial void OnIsStreamingChanged(bool value)
     {
         if (value) return;
+        // An empty or failed reply still needs to stop the waiting animation.
+        IsAwaitingFirstToken = false;
         StopLiveRender();
         RenderMarkdown();
     }

@@ -63,6 +63,41 @@ public class MessageViewModelTests
         Assert.Same(vm, requested);
     }
 
+    [Fact]
+    public void FirstToken_ClearsAwaitingAndRendersImmediately()
+    {
+        TestThread.RunSta(() =>
+        {
+            var vm = new MessageViewModel(isUser: false, "bot")
+            {
+                IsStreaming = true,
+                IsAwaitingFirstToken = true,
+            };
+
+            vm.RawMarkdown = "hello";
+
+            Assert.False(vm.IsAwaitingFirstToken);
+            Assert.NotNull(vm.Rendered);
+        });
+    }
+
+    [Fact]
+    public void EmptyReply_StopsAwaitingWhenStreamingEnds()
+    {
+        TestThread.RunSta(() =>
+        {
+            var vm = new MessageViewModel(isUser: false, "bot")
+            {
+                IsStreaming = true,
+                IsAwaitingFirstToken = true,
+            };
+
+            vm.IsStreaming = false;
+
+            Assert.False(vm.IsAwaitingFirstToken);
+        });
+    }
+
     private static MessageViewModel Editable(string content) =>
         new(isUser: true, "You") { Id = 7, RawMarkdown = content };
 }

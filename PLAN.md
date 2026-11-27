@@ -59,6 +59,8 @@ installer/Product.wxs              # WiX v4 per-user MSI
 - Markdown is re-rendered on a coalesced ~60 ms dispatcher timer while streaming, so formatted content (including multiple code blocks) appears as soon as possible.
 - Final render occurs the moment streaming ends.
 - Non-streaming provider responses are rendered in one pass — no artificial chunking.
+- A bouncing-dots indicator occupies the assistant bubble until the first token arrives; the first
+  token renders immediately so the bubble never blinks empty, and an empty/failed reply clears it.
 
 ### 4. Multiple Markdown/code blocks per bubble
 
@@ -113,6 +115,12 @@ installer/Product.wxs              # WiX v4 per-user MSI
 - Root cause: the attached-property callback only subscribed to `PasswordChanged` when the bound value changed from its default, so newly added endpoints with an empty initial key never propagated typing.
 - Regression tests cover two endpoints with distinct keys through save/reload.
 
+### 10. Active conversation in the sidebar
+
+- The conversation currently in view gets an accent bar, tinted background, and accent border.
+- A multi-value converter compares the view model's `SelectedConversation` with each sidebar row,
+  so switching chats moves the marker without changing the persisted `Conversation` model.
+
 ## Persistence
 
 | Table | Purpose |
@@ -127,7 +135,7 @@ installer/Product.wxs              # WiX v4 per-user MSI
 ## Verification
 
 - Unit tests: concurrent streams, edit-as-new replacement, context filtering/advancement, model filtering, placement math, multi-endpoint keys, multi-code-block rendering.
-- WPF UI harness: per-conversation send/stop state, live Markdown updates, context pill, model search/tabs, responsive settings, context cutoff dimming, slide offsets.
+- WPF UI harness: per-conversation send/stop state, live Markdown updates, typing indicator, sidebar selection marker, context pill, model search/tabs, responsive settings, context cutoff dimming, slide offsets.
 - `dotnet test AIConsole.slnx`; build through `compile.py` menu option 1.
 
 ## Git

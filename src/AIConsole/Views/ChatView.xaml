@@ -26,9 +26,40 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <Grid Margin="0,1">
-                                    <Border x:Name="ConvBg" CornerRadius="9" Padding="10,8" Background="Transparent" Cursor="Hand"
+                                    <Border x:Name="ActiveMarker" Width="3" Margin="-6,2,0,2"
+                                            HorizontalAlignment="Left" VerticalAlignment="Stretch"
+                                            Background="{DynamicResource AccentBrush}" CornerRadius="2"
+                                            IsHitTestVisible="False">
+                                        <Border.Visibility>
+                                            <MultiBinding Converter="{x:Static converters:IsActiveConversationConverter.Instance}">
+                                                <Binding Path="DataContext.SelectedConversation" RelativeSource="{RelativeSource AncestorType={x:Type UserControl}}"/>
+                                                <Binding/>
+                                            </MultiBinding>
+                                        </Border.Visibility>
+                                    </Border>
+                                    <Border x:Name="ConvBg" CornerRadius="9" Padding="10,8" Cursor="Hand"
                                             MouseLeftButtonUp="Conversation_Click"
                                             ToolTip="Right-click to rename or remove">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="Transparent"/>
+                                                <Setter Property="BorderBrush" Value="Transparent"/>
+                                                <Setter Property="BorderThickness" Value="0"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Value="True">
+                                                        <DataTrigger.Binding>
+                                                            <MultiBinding Converter="{x:Static converters:IsActiveConversationConverter.Instance}">
+                                                                <Binding Path="DataContext.SelectedConversation" RelativeSource="{RelativeSource AncestorType={x:Type UserControl}}"/>
+                                                                <Binding/>
+                                                            </MultiBinding>
+                                                        </DataTrigger.Binding>
+                                                        <Setter Property="Background" Value="{DynamicResource AccentDimBrush}"/>
+                                                        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                                        <Setter Property="BorderThickness" Value="1"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
                                         <Border.ContextMenu>
                                             <ContextMenu Opened="ConversationMenu_Opened"
                                                          DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">

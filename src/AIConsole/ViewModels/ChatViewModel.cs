@@ -324,6 +324,7 @@ public partial class ChatViewModel : ObservableObject
             var assistantVm = new MessageViewModel(false, model.ModelId)
             {
                 IsStreaming = true,
+                IsAwaitingFirstToken = true,
                 ModelKey = model.Key,
             };
             var cts = new CancellationTokenSource();
