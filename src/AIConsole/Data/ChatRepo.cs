@@ -57,13 +57,13 @@ public sealed class ChatRepo
 
     public ChatMessage Add(ChatMessage m)
     {
-        m.Id = (long)(_db.Scalar("""
+        _db.Run("""
             INSERT INTO messages(conversation_id,role,content,model_id,participant,created_at)
-            VALUES(@c,@r,@content,@m,@p,@t);
-            SELECT last_insert_rowid();
+            VALUES(@c,@r,@content,@m,@p,@t)
             """,
             ("@c", m.ConversationId), ("@r", m.Role.ToString()), ("@content", m.Content),
-            ("@m", m.ModelId), ("@p", m.Participant), ("@t", m.Timestamp.ToString("o"))) ?? 0L);
+            ("@m", m.ModelId), ("@p", m.Participant), ("@t", m.Timestamp.ToString("o")));
+        m.Id = Convert.ToInt64(_db.Scalar("SELECT last_insert_rowid();") ?? 0L);
         Touch(m.ConversationId);
         return m;
     }
