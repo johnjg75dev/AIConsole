@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using AIConsole.Services;
 using AIConsole.ViewModels;
 
 namespace AIConsole.Views;
@@ -14,7 +15,10 @@ public partial class SettingsView : UserControl
         Loaded += (_, _) =>
         {
             if (HotkeyCapture is not null && ViewModel is { } vm)
+            {
+                HotkeyCapture.Value = Hotkey.Parse(vm.HotkeyText);
                 HotkeyCapture.ValueChanged += hk => vm.SetHotkey(hk);
+            }
         };
     }
 
