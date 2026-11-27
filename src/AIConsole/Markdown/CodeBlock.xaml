@@ -1,0 +1,48 @@
+<UserControl x:Class="AIConsole.Markdown.CodeBlock"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             mc:Ignorable="d" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008">
+    <Border Background="{DynamicResource SyntaxBackgroundBrush}"
+            BorderBrush="{DynamicResource SyntaxGutterBorderBrush}" BorderThickness="1"
+            CornerRadius="10" Margin="0,6,0,6" ClipToBounds="True">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- header -->
+            <Grid Grid.Row="0" Background="{DynamicResource CodeHeaderBackgroundBrush}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Name="LanguageLabel" Grid.Column="0" FontFamily="{DynamicResource FontMono}"
+                           FontSize="10.5" Foreground="{DynamicResource SyntaxLineNumberBrush}"
+                           Padding="12,5" VerticalAlignment="Center" Text="code" FontWeight="SemiBold"/>
+                <Button x:Name="CopyButton" Grid.Column="1" Style="{DynamicResource IconButton}" Content="&#xE8C8;"
+                        ToolTip="Copy code" Padding="8,4" FontSize="13"/>
+            </Grid>
+
+            <!-- body: gutter + code -->
+            <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border x:Name="Gutter" Grid.Column="0" Padding="8,8,8,8" MinWidth="30"
+                            Background="{DynamicResource CodeHeaderBackgroundBrush}">
+                        <StackPanel x:Name="GutterLines" HorizontalAlignment="Right"/>
+                    </Border>
+                    <Border x:Name="GutterDivider" Grid.Column="1" Width="1"
+                            Background="{DynamicResource SyntaxGutterBorderBrush}"/>
+                    <Border Grid.Column="2" Padding="12,8,12,8"><StackPanel x:Name="CodeLines"/></Border>
+                </Grid>
+            </ScrollViewer>
+        </Grid>
+    </Border>
+</UserControl>

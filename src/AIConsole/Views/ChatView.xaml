@@ -1,0 +1,108 @@
+<UserControl x:Class="AIConsole.Views.ChatView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:AIConsole.Views.Controls"
+             xmlns:converters="clr-namespace:AIConsole.Converters"
+             mc:Ignorable="d" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008">
+
+    <Grid Background="Transparent">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="{Binding SidebarWidth}"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- ═══ sidebar ═══ -->
+        <Border Grid.Column="0" Background="{DynamicResource SurfaceAltBrush}" BorderBrush="{DynamicResource BorderBrush}"
+                BorderThickness="0,0,1,0" Visibility="{Binding SidebarVisible, Converter={x:Static converters:BoolToVisibilityConverter.Instance}}">
+            <Grid>
+                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                <Grid Grid.Row="0" Margin="10,10,10,6">
+                    <Button Style="{DynamicResource AccentButton}" Content="＋  New chat" Command="{Binding NewChatCommand}"
+                            HorizontalAlignment="Stretch" Padding="10,8" FontWeight="SemiBold"/>
+                </Grid>
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="6,0,4,8">
+                    <ItemsControl ItemsSource="{Binding Conversations}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,1">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <Border x:Name="ConvBg" CornerRadius="9" Padding="10,8" Background="Transparent" Cursor="Hand"
+                                            MouseLeftButtonUp="Conversation_Click">
+                                        <TextBlock Text="{Binding Title}" FontSize="12.5" TextTrimming="CharacterEllipsis"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                    </Border>
+                                    <Button Grid.Column="1" Style="{DynamicResource IconButton}" Content="&#xE74D;" FontSize="11"
+                                            Opacity="0.5" ToolTip="Delete chat"
+                                            Command="{Binding DataContext.DeleteConversationCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+
+        <!-- ═══ chat column ═══ -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- header -->
+            <Grid Grid.Row="0" Margin="12,10,12,6">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Button Grid.Column="0" Style="{DynamicResource IconButton}" Content="&#xE700;" FontSize="15"
+                        ToolTip="Toggle conversations" Command="{Binding ToggleSidebarCommand}" Margin="0,0,6,0"/>
+                <ComboBox Grid.Column="1" ItemsSource="{Binding Models}" SelectedItem="{Binding SelectedModel}"
+                          DisplayMemberPath="Display" MaxWidth="420" HorizontalAlignment="Left"
+                          ToolTip="Choose model" FontSize="12.5"/>
+                <Button Grid.Column="2" Style="{DynamicResource IconButton}" Content="&#xE946;" FontSize="15"
+                        ToolTip="Refresh models" Command="{Binding RebuildModelsCommand}"/>
+            </Grid>
+
+            <!-- messages -->
+            <ScrollViewer Grid.Row="1" x:Name="MsgScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                          Padding="12,4,12,4">
+                <ItemsControl ItemsSource="{Binding Messages}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate><controls:ChatBubble/></DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <!-- status -->
+            <TextBlock Grid.Row="2" Text="{Binding StatusMessage}" Foreground="{DynamicResource ErrorBrush}"
+                       FontSize="11.5" Margin="14,0,14,2" TextWrapping="Wrap"
+                       Visibility="{Binding StatusMessage, Converter={x:Static converters:StringToVisibilityConverter.Instance}}"/>
+
+            <!-- composer -->
+            <Grid Grid.Row="3" Margin="12,4,12,12">
+                <Border Background="{DynamicResource SurfaceAltBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                        CornerRadius="14" Padding="4">
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <TextBox x:Name="InputBox" BorderThickness="0" Background="Transparent" FontSize="13.5"
+                                 Text="{Binding InputText, UpdateSourceTrigger=PropertyChanged}"
+                                 TextWrapping="Wrap" AcceptsReturn="True" MinHeight="38" MaxHeight="140"
+                                 VerticalScrollBarVisibility="Auto" Padding="8,8"
+                                 ToolTip="Enter to send · Shift+Enter for newline" PreviewKeyDown="InputBox_PreviewKeyDown"/>
+                        <Button Grid.Column="1" x:Name="SendButton" Width="40" Height="40" Margin="4" VerticalAlignment="Bottom"
+                                Style="{DynamicResource AccentButton}" ToolTip="Send" FontFamily="{DynamicResource FontGlyph}" FontSize="15"
+                                Click="Send_Click">
+                            <TextBlock Text="&#xE724;"/>
+                        </Button>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

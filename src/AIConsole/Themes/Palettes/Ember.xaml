@@ -1,0 +1,52 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <SolidColorBrush x:Key="AppBackgroundBrush" Color="#120D0A"/>
+    <SolidColorBrush x:Key="SurfaceBrush" Color="#EA1C1511"/>
+    <SolidColorBrush x:Key="SurfaceAltBrush" Color="#261F1A"/>
+    <SolidColorBrush x:Key="SurfaceHoverBrush" Color="#322822"/>
+    <SolidColorBrush x:Key="BorderBrush" Color="#3D3129"/>
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#FDF3EC"/>
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#B39C8C"/>
+    <SolidColorBrush x:Key="TextDisabledBrush" Color="#6E5D52"/>
+
+    <SolidColorBrush x:Key="AccentBrush" Color="#F97316"/>
+    <SolidColorBrush x:Key="AccentSecondaryBrush" Color="#F43F5E"/>
+    <SolidColorBrush x:Key="AccentDimBrush" Color="#55F97316"/>
+    <SolidColorBrush x:Key="OnAccentBrush" Color="#FFFFFF"/>
+    <LinearGradientBrush x:Key="AccentGradientBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#F97316" Offset="0"/>
+        <GradientStop Color="#F43F5E" Offset="1"/>
+    </LinearGradientBrush>
+    <Color x:Key="PanelShadowColor">#F97316</Color>
+
+    <LinearGradientBrush x:Key="BubbleUserBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#F97316" Offset="0"/>
+        <GradientStop Color="#F43F5E" Offset="1"/>
+    </LinearGradientBrush>
+    <SolidColorBrush x:Key="BubbleUserTextBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="BubbleAssistantBrush" Color="#241C18"/>
+    <SolidColorBrush x:Key="BubbleAssistantTextBrush" Color="#FDF3EC"/>
+
+    <SolidColorBrush x:Key="SuccessBrush" Color="#A3E635"/>
+    <SolidColorBrush x:Key="ErrorBrush" Color="#FB7185"/>
+    <SolidColorBrush x:Key="WarningBrush" Color="#FBBF24"/>
+
+    <SolidColorBrush x:Key="SyntaxBackgroundBrush" Color="#17100C"/>
+    <SolidColorBrush x:Key="CodeHeaderBackgroundBrush" Color="#201813"/>
+    <SolidColorBrush x:Key="SyntaxLineNumberBrush" Color="#5E4D42"/>
+    <SolidColorBrush x:Key="SyntaxGutterBorderBrush" Color="#332A24"/>
+    <SolidColorBrush x:Key="SyntaxPlainBrush" Color="#F3E4D8"/>
+    <SolidColorBrush x:Key="SyntaxKeywordBrush" Color="#FB923C"/>
+    <SolidColorBrush x:Key="SyntaxStringBrush" Color="#FCD34D"/>
+    <SolidColorBrush x:Key="SyntaxCommentBrush" Color="#7A6A5E"/>
+    <SolidColorBrush x:Key="SyntaxNumberBrush" Color="#F472B6"/>
+    <SolidColorBrush x:Key="SyntaxTypeBrush" Color="#FBBF24"/>
+    <SolidColorBrush x:Key="SyntaxFunctionBrush" Color="#FDE68A"/>
+    <SolidColorBrush x:Key="SyntaxOperatorBrush" Color="#FCA5A5"/>
+    <SolidColorBrush x:Key="SyntaxPunctuationBrush" Color="#C9B8A9"/>
+    <SolidColorBrush x:Key="SyntaxTagBrush" Color="#F43F5E"/>
+    <SolidColorBrush x:Key="SyntaxAttributeBrush" Color="#FDBA74"/>
+    <SolidColorBrush x:Key="SyntaxPreprocessorBrush" Color="#FB7185"/>
+    <SolidColorBrush x:Key="SyntaxConstantBrush" Color="#FDA4AF"/>
+</ResourceDictionary>
