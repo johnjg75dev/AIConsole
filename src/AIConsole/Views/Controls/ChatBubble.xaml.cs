@@ -18,6 +18,7 @@ public partial class ChatBubble : UserControl
         Bubble.MouseEnter += (_, _) => AnimateScale(1.008);
         Bubble.MouseLeave += (_, _) => AnimateScale(1.0);
         Loaded += (_, _) => ApplyStyle();
+        Unloaded += (_, _) => { if (_hooked is not null) _hooked.PropertyChanged -= OnVmPropertyChanged; _hooked = null; };
     }
 
     private void ApplyStyle()
