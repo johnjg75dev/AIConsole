@@ -69,10 +69,12 @@ public partial class ChatViewModel : ObservableObject
         Messages.Clear();
         if (value is not null)
         {
-            foreach (var m in _chat.Messages(value.Id))
+            var msgs = _chat.Messages(value.Id);
+            var attMap = _chat.AttachmentsForMany(msgs.Select(m => m.Id));
+            foreach (var m in msgs)
             {
                 var vm = new MessageViewModel(m);
-                vm.AttachmentsLabel = AttachmentLabel(_chat.Attachments(m.Id));
+                vm.AttachmentsLabel = AttachmentLabel(attMap.TryGetValue(m.Id, out var list) ? list : EmptyAttachments);
                 Hook(vm);
                 Messages.Add(vm);
             }
@@ -177,17 +179,20 @@ public partial class ChatViewModel : ObservableObject
             }
             convId = SelectedConversation.Id;
 
-            // user message
+            // Set the guard before any persistence work so a second send cannot start mid-flight.
+            IsStreaming = true;
+
+            // user message + attachments (atomic)
             var userVm = new MessageViewModel(true, "You") { RawMarkdown = text };
             userVm.RenderMarkdown();
-            var userMsg = _chat.Add(new ChatMessage
+            var attachmentsToSend = PendingAttachments.ToList();
+            var userMsg = _chat.AddWithAttachments(new ChatMessage
             {
                 ConversationId = convId, Role = ChatRole.User, Content = text,
                 Participant = "You", ModelId = model.Key,
-            });
+            }, attachmentsToSend);
             userVm.Id = userMsg.Id;
-            foreach (var attachment in PendingAttachments) _chat.AddAttachment(userMsg.Id, attachment);
-            userVm.AttachmentsLabel = AttachmentLabel(PendingAttachments);
+            userVm.AttachmentsLabel = AttachmentLabel(attachmentsToSend);
             PendingAttachments.Clear();
             Hook(userVm);
             Messages.Add(userVm);
@@ -199,16 +204,17 @@ public partial class ChatViewModel : ObservableObject
             Messages.Add(assistantVm);
             MessageAdded?.Invoke();
 
-            // history payload (user msg persisted; assistant not yet)
-            var history = _chat.Messages(convId)
+            // history payload (user msg persisted; assistant not yet) + batched attachments
+            var convMessages = _chat.Messages(convId);
+            var attMap = _chat.AttachmentsForMany(convMessages.Select(m => m.Id));
+            var history = convMessages
                 .Select(m => new ChatMessageDto(
                     m.Role switch { ChatRole.User => "user", ChatRole.Assistant => "assistant", _ => "system" },
-                    BuildContent(m)))
+                    BuildContent(m, attMap.TryGetValue(m.Id, out var att) ? att : EmptyAttachments)))
                 .ToList();
 
             _cts = new CancellationTokenSource();
             var token = _cts.Token;
-            IsStreaming = true;
 
             await foreach (var delta in _client.StreamChatAsync(ep.BaseUrl, ep.ApiKey, model.ModelId, history, token))
             {
@@ -278,9 +284,11 @@ public partial class ChatViewModel : ObservableObject
     private static string AttachmentLabel(IEnumerable<ChatAttachment> attachments) =>
         string.Join("  ·  ", attachments.Select(a => "📎 " + a.Name));
 
-    private object BuildContent(ChatMessage message)
+    private static readonly IReadOnlyList<ChatAttachment> EmptyAttachments = new List<ChatAttachment>();
+
+    /// <summary>Build the OpenAI message `content` (string, or multimodal parts when attachments exist).</summary>
+    internal static object BuildContent(ChatMessage message, IReadOnlyList<ChatAttachment> attachments)
     {
-        var attachments = _chat.Attachments(message.Id);
         if (attachments.Count == 0) return message.Content;
         if (attachments.All(a => !a.IsImage))
             return message.Content + string.Concat(attachments.Select(a => $"\n\nAttachment: {a.Name}\n\n{System.Text.Encoding.UTF8.GetString(a.Data)}"));

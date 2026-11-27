@@ -19,10 +19,8 @@
   <ItemGroup>
     <Resource Include="Assets\aiconsole.ico" />
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="AIConsole.Tests" />
+  </ItemGroup>
 
 </Project>
-
-
-
-
-

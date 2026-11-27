@@ -15,7 +15,7 @@ public partial class DecisionWindow : Window
         _viewModel = viewModel;
         InitializeComponent();
         UpdateCriteria();
-        Closed += (_, _) => _cancel.Cancel();
+        Closed += (_, _) => { _cancel.Cancel(); _cancel.Dispose(); };
     }
 
     private void Type_Changed(object sender, SelectionChangedEventArgs e) => UpdateCriteria();

@@ -80,5 +80,5 @@ public sealed record DecisionResult(string Model, IReadOnlyList<DecisionAnswer> 
     }
 
     private static string ElementText(JsonElement value) => value.ValueKind == JsonValueKind.String ? value.GetString() ?? "" : value.GetRawText();
-    private static string FormatPercent(double value) => value.ToString("0.##", CultureInfo.CurrentCulture) + "%";
+    private static string FormatPercent(double value) => value.ToString("0.##", CultureInfo.InvariantCulture) + "%";
 }

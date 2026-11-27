@@ -51,6 +51,8 @@ Settings → **Import from other tools**:
 ```powershell
 dotnet build src/AIConsole/AIConsole.csproj
 dotnet run   --project src/AIConsole
+# unit tests:
+dotnet test  tests/AIConsole.Tests/AIConsole.Tests.csproj
 # self-contained single-file:
 dotnet publish src/AIConsole/AIConsole.csproj -p:PublishProfile=SingleFile
 # -> src/AIConsole/artifacts/SingleFile/AIConsole.exe

@@ -76,8 +76,43 @@ public sealed class ChatRepo
         _db.Query("SELECT name,media_type,data FROM message_attachments WHERE message_id=@id ORDER BY id",
             r => new ChatAttachment(r.GetString(0), r.GetString(1), (byte[])r.GetValue(2)), ("@id", messageId));
 
-    public void UpdateContent(long id, string content) =>
-        _db.Run("UPDATE messages SET content=@content WHERE id=@id", ("@id", id), ("@content", content));
+    /// <summary>Atomically insert a message and its attachments.</summary>
+    public ChatMessage AddWithAttachments(ChatMessage m, IEnumerable<ChatAttachment> attachments)
+    {
+        _db.InTransaction(() =>
+        {
+            Add(m);
+            foreach (var a in attachments) AddAttachment(m.Id, a);
+        });
+        return m;
+    }
+
+    /// <summary>Fetch attachments for many messages in one query (no N+1).</summary>
+    public Dictionary<long, List<ChatAttachment>> AttachmentsForMany(IEnumerable<long> messageIds)
+    {
+        var ids = messageIds.Distinct().ToList();
+        var result = new Dictionary<long, List<ChatAttachment>>();
+        foreach (var id in ids) result[id] = new List<ChatAttachment>();
+        if (ids.Count == 0) return result;
+        var placeholders = string.Join(",", ids.Select((_, i) => "@id" + i));
+        var args = ids.Select((id, i) => ("@id" + i, (object?)id)).ToArray();
+        var rows = _db.Query(
+            $"SELECT message_id,name,media_type,data FROM message_attachments WHERE message_id IN ({placeholders}) ORDER BY id",
+            r => (MessageId: r.GetInt64(0), Attachment: new ChatAttachment(r.GetString(1), r.GetString(2), (byte[])r.GetValue(3))), args);
+        foreach (var row in rows)
+            if (result.TryGetValue(row.MessageId, out var list)) list.Add(row.Attachment);
+        return result;
+    }
+
+    public void UpdateContent(long id, string content)
+    {
+        _db.InTransaction(() =>
+        {
+            _db.Run("UPDATE messages SET content=@content WHERE id=@id", ("@id", id), ("@content", content));
+            _db.Run("UPDATE conversations SET updated_at=@u WHERE id=(SELECT conversation_id FROM messages WHERE id=@id)",
+                ("@id", id), ("@u", DateTimeOffset.Now.ToString("o")));
+        });
+    }
 
     public void DeleteMessage(long id) => _db.Run("DELETE FROM messages WHERE id=@id", ("@id", id));
 }

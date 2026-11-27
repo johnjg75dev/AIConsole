@@ -221,13 +221,27 @@ public sealed class OpenAiClient : IDisposable
     public static string CombineUrl(string baseUrl, string path)
     {
         var b = (baseUrl ?? "").Trim().TrimEnd('/');
-        // don't double-append /v1
-        if (b.EndsWith("/v1", StringComparison.OrdinalIgnoreCase))
-            return b + "/" + path;
-        return b + "/v1/" + path;
+        // A bare host needs /v1; an explicit path (e.g. /api, /v1) is used as-is so
+        // providers that don't mount under /v1 keep working.
+        return b + (NeedsV1Prefix(b) ? "/v1/" : "/") + path;
     }
 
-    private static IEnumerable<string> ModelListCandidates(string baseUrl)
+    /// <summary>True when the base URL has no path of its own, so the API lives under /v1.</summary>
+    internal static bool NeedsV1Prefix(string baseUrl)
+    {
+        var b = (baseUrl ?? "").Trim().TrimEnd('/');
+        if (b.EndsWith("/v1", StringComparison.OrdinalIgnoreCase)) return false;
+        try
+        {
+            return new Uri(b, UriKind.Absolute).AbsolutePath.Trim('/').Length == 0;
+        }
+        catch
+        {
+            return true; // unparseable: preserve the legacy /v1 behavior
+        }
+    }
+
+    internal static IEnumerable<string> ModelListCandidates(string baseUrl)
     {
         var b = (baseUrl ?? "").Trim().TrimEnd('/');
         if (b.EndsWith("/v1", StringComparison.OrdinalIgnoreCase))
@@ -235,10 +249,15 @@ public sealed class OpenAiClient : IDisposable
             yield return b + "/models";
             yield return b + "/../models"; // tolerate odd roots
         }
-        else
+        else if (NeedsV1Prefix(b))
         {
             yield return b + "/v1/models";
             yield return b + "/models";
+        }
+        else
+        {
+            yield return b + "/models";
+            yield return b + "/v1/models";
         }
     }
 

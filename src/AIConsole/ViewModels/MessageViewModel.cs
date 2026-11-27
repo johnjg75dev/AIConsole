@@ -21,7 +21,7 @@ public partial class MessageViewModel : ObservableObject
     [ObservableProperty] private FrameworkElement? _rendered;
     [ObservableProperty] private bool _isEditing;
     [ObservableProperty] private string _editText = "";
-    public string AttachmentsLabel { get; set; } = "";
+    [ObservableProperty] private string _attachmentsLabel = "";
 
     public MessageViewModel(ChatMessage message)
     {

@@ -14,14 +14,33 @@ public sealed class Db : IDisposable
     private readonly SqliteConnection _conn;
     private readonly object _lock = new();
 
-    public Db()
+    public Db() : this(DatabasePath) { }
+
+    /// <summary>Connect to a specific database file (used by tests); ":memory:" supported.</summary>
+    public Db(string databasePath)
     {
-        Directory.CreateDirectory(DataDirectory);
-        _conn = new SqliteConnection($"Data Source={DatabasePath}");
+        var full = databasePath == ":memory:" ? databasePath : Path.GetFullPath(databasePath);
+        if (full != ":memory:")
+        {
+            var dir = Path.GetDirectoryName(full);
+            if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
+        }
+        _conn = new SqliteConnection($"Data Source={full}");
         _conn.Open();
         Exec("PRAGMA journal_mode=WAL;");
         Exec("PRAGMA foreign_keys=ON;");
         Migrate();
+    }
+
+    /// <summary>Run <paramref name="action"/> in a single SQLite transaction (atomic).</summary>
+    public void InTransaction(Action action)
+    {
+        lock (_lock)
+        {
+            using var tx = _conn.BeginTransaction();
+            try { action(); tx.Commit(); }
+            catch { try { tx.Rollback(); } catch { } throw; }
+        }
     }
 
     private void Migrate()
