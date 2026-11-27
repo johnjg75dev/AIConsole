@@ -14,13 +14,26 @@
                 HorizontalAlignment="Left" RenderTransformOrigin="0.5,0.5">
             <Border.RenderTransform><ScaleTransform x:Name="HoverScale" ScaleX="1" ScaleY="1"/></Border.RenderTransform>
 
-            <Grid>
+            <StackPanel>
+              <Grid>
                 <TextBlock x:Name="StreamingText" Visibility="Collapsed" TextWrapping="Wrap" FontSize="13.5"/>
                 <ContentPresenter x:Name="MarkdownHost" Content="{Binding Rendered}"/>
-            </Grid>
+              </Grid>
+              <TextBlock Text="{Binding AttachmentsLabel}" TextWrapping="Wrap" FontSize="11" Margin="0,6,0,0"
+                         Foreground="{DynamicResource TextSecondaryBrush}"/>
+              <StackPanel>
+                  <StackPanel.Style><Style TargetType="StackPanel"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding IsEditing}" Value="True"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></StackPanel.Style>
+                  <TextBox Text="{Binding EditText, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" MinWidth="240" MinHeight="70" MaxHeight="200" VerticalScrollBarVisibility="Auto" Margin="0,8,0,6"/>
+                  <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                      <Button Content="Cancel" Command="{Binding CancelEditCommand}" Margin="0,0,6,0"/>
+                      <Button Content="Save" Command="{Binding SaveEditCommand}"/>
+                  </StackPanel>
+              </StackPanel>
+            </StackPanel>
 
             <Border.ContextMenu>
                 <ContextMenu>
+                    <MenuItem Header="Edit message" Command="{Binding EditCommand}"/>
                     <MenuItem Header="Copy" Command="{Binding CopyCommand}" Icon="&#x29C9;"/>
                     <MenuItem Header="Remove from history" Command="{Binding RemoveCommand}" Icon="&#x2715;"/>
                 </ContextMenu>
@@ -36,6 +49,8 @@
 
             <StackPanel x:Name="Actions" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Left"
                         VerticalAlignment="Center" Opacity="0">
+                <Button Style="{DynamicResource IconButton}" Content="✎" FontSize="12" Padding="5"
+                        Command="{Binding EditCommand}" ToolTip="Edit message"/>
                 <Button Style="{DynamicResource IconButton}" Content="&#x29C9;" FontSize="12" Padding="5"
                         Command="{Binding CopyCommand}" ToolTip="Copy"/>
                 <Button Style="{DynamicResource IconButton}" Content="&#x2715;" FontSize="12" Padding="5"

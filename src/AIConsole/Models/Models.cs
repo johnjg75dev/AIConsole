@@ -11,6 +11,11 @@ public sealed class Conversation
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.Now;
 }
 
+public sealed record ChatAttachment(string Name, string MediaType, byte[] Data)
+{
+    public bool IsImage => MediaType.StartsWith("image/", StringComparison.OrdinalIgnoreCase);
+}
+
 public sealed class ChatMessage
 {
     public long Id { get; set; }
@@ -55,7 +60,7 @@ public sealed class AppSettings
 {
     // Popup
     public SlideEdge SlideEdge { get; set; } = SlideEdge.Top;
-    public bool HideOnFocusLoss { get; set; } = true;
+    public bool HideOnFocusLoss { get; set; } = false;
     public string Hotkey { get; set; } = "Ctrl+`";
     public bool StartWithWindows { get; set; }
     public bool PanelAcrylic { get; set; } = true;

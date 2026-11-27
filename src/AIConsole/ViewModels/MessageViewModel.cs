@@ -19,6 +19,9 @@ public partial class MessageViewModel : ObservableObject
     [ObservableProperty] private string _rawMarkdown = "";
     [ObservableProperty] private bool _isStreaming;
     [ObservableProperty] private FrameworkElement? _rendered;
+    [ObservableProperty] private bool _isEditing;
+    [ObservableProperty] private string _editText = "";
+    public string AttachmentsLabel { get; set; } = "";
 
     public MessageViewModel(ChatMessage message)
     {
@@ -51,6 +54,17 @@ public partial class MessageViewModel : ObservableObject
 
     [RelayCommand]
     private void Copy() { try { Clipboard.SetText(RawMarkdown); } catch { } }
+
+    [RelayCommand]
+    private void Edit() { if (!IsStreaming && Id != 0) { EditText = RawMarkdown; IsEditing = true; } }
+
+    [RelayCommand]
+    private void CancelEdit() => IsEditing = false;
+
+    [RelayCommand]
+    private void SaveEdit() => EditRequested?.Invoke(this);
+
+    public event Action<MessageViewModel>? EditRequested;
 
     [RelayCommand]
     private void Remove() => RemoveRequested?.Invoke(this);

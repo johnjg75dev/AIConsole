@@ -68,6 +68,14 @@ public sealed class ChatRepo
         return m;
     }
 
+    public void AddAttachment(long messageId, ChatAttachment attachment) =>
+        _db.Run("INSERT INTO message_attachments(message_id,name,media_type,data) VALUES(@id,@name,@type,@data)",
+            ("@id", messageId), ("@name", attachment.Name), ("@type", attachment.MediaType), ("@data", attachment.Data));
+
+    public List<ChatAttachment> Attachments(long messageId) =>
+        _db.Query("SELECT name,media_type,data FROM message_attachments WHERE message_id=@id ORDER BY id",
+            r => new ChatAttachment(r.GetString(0), r.GetString(1), (byte[])r.GetValue(2)), ("@id", messageId));
+
     public void UpdateContent(long id, string content) =>
         _db.Run("UPDATE messages SET content=@content WHERE id=@id", ("@id", id), ("@content", content));
 
